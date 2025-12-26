@@ -1,5 +1,5 @@
 `timescale 1ns/10ps
-
+//wszystkie funkcje koncza tick przed negedge SCL
 module driver_I2C(input logic clk, inout SDA, inout SCL);
   localparam HIGH_PERIOD_SCL = 6000; //min - 4000ns
   localparam LOW_PERIOD_SCL = 6000; //min - 4700ns
@@ -25,12 +25,31 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
   
+  task sendStop();
+    begin
+      SCL_ctrl = 0;
+      #DATA_SETUP_TIME SDA_ctrl = 0;
+      #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
+      #(HIGH_PERIOD_SCL/2) SDA_ctrl = 1;
+      #(HIGH_PERIOD_SCL/2);
+    end
+  endtask
+  
   task sendBit (input bit data);
     begin
       SCL_ctrl = 0;
       #DATA_SETUP_TIME SDA_ctrl = data;
       #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
       #HIGH_PERIOD_SCL;
+    end
+  endtask
+  
+  task sendData (input reg [7:0] data);
+    begin
+      	for (i = 7; i >= 0; i--) begin
+          sendBit(data[i]);
+        end
+      	ack_got = 0;
     end
   endtask
   
@@ -75,9 +94,34 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       for (i = 7; i >= 0; i--) begin
       	readBit(data_got[i]);
       end
+      ack_got = 0;
     end
   endtask
+      
+  task writeTransaction(input reg [6:0] addr, input reg [7:0] data); 
+    begin
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+      getACK();
+      if(ack_got) begin
+        sendData(data);
+      end
+    end
+  endtask
+  
+  task readTransaction(input reg [6:0] addr); 
+    begin
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+      getACK();
+      if(ack_got) begin
+        readData();
+      end
+    end
+  endtask
+        
 endmodule
+
 
 
 //I2C Target - Standard I2C protocol (fSCL up to 100kHz)
