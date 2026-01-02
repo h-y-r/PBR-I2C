@@ -15,9 +15,44 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   logic ack_got = 0;
   reg [7:0] data_got;
   int i;
-    
+
+  // dodane
+  typedef enum logic [3:0] {
+    M_IDLE,      // idle
+    M_START,     // generowanie START
+    M_ADDR,      // wysylanie 7-bit addr + rw
+    M_ACK_ADDR,  // probkowanie ACK po adresie
+    M_DATA_TX,   // wysylanie danych (master->target)
+    M_ACK_DATA,  // probkowanie ACK po danych / wysylanie ACK/NACK po read
+    M_DATA_RX,   // odczyt danych (target->master)
+    M_STOP,      // generowanie STOP
+    M_DONE,      // wszystko OK
+    M_ERROR      // blad nack po adresie czy cos
+  } master_phase_e;
+
+  master_phase_e phase = M_IDLE;
+
+  // konwencja bit_idx
+  //   >=0  indeks bitu adresu/danych
+  //   -1   slot bitu rw
+  //   -2   slot ack/nack
+  localparam int BIT_RW  = -1;
+  localparam int BIT_ACK = -2;
+
+  int bit_idx  = BIT_ACK;  // poza danymi
+  int byte_idx = -1;       // poza burstem
+  bit last_ack = 1'b0;     // 1 ack 0 nack
+  // koniec dodanego
+
+
   task sendStart();
     begin
+      // dodane
+      phase    = M_START;
+      bit_idx  = BIT_ACK;
+      byte_idx = -1;
+      // koniec dodanego
+
       SDA_ctrl = 1;
 	  SCL_ctrl = 1;
       #(HIGH_PERIOD_SCL/2);
@@ -28,16 +63,26 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   task sendStop();
     begin
+      // dodane
+      phase   = M_STOP;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
       SCL_ctrl = 0;
       #DATA_SETUP_TIME SDA_ctrl = 0;
       #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
       #(HIGH_PERIOD_SCL/2) SDA_ctrl = 1;
       #(HIGH_PERIOD_SCL/2);
+
+      // dodane
+      phase = M_DONE;
+      // koniec dodanego
     end
   endtask
   
   task sendBit (input bit data);
     begin
+
       SCL_ctrl = 0;
       #DATA_SETUP_TIME SDA_ctrl = data;
       #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
@@ -47,20 +92,50 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   task sendData (input reg [7:0] data);
     begin
+        // dodane
+        phase = M_DATA_TX;
+        // koniec dodanego
+
       	for (i = 7; i >= 0; i--) begin
+          // dodane
+          bit_idx = i;
+          // koniec dodanego
+
           sendBit(data[i]);
         end
-      	ack_got = 0;
+
+        // dodane
+        bit_idx  = BIT_ACK;
+        ack_got  = 0;
+        // koniec dodanego
     end
   endtask
   
   task sendAddressRW(input reg [6:0] addr, input bit rw);
     begin
+      // dodane
+      phase    = M_ADDR;
+      byte_idx = -1;
+      // koniec dodanego
+
       for (i = 6; i >= 0; i--) begin
+        // dodane
+        bit_idx = i;
+        // koniec dodanego
+
         sendBit(addr[i]);
       end
-        sendBit(rw);
-      	SDA_ctrl = 1;
+
+      // dodane
+      bit_idx = BIT_RW;
+      // koniec dodanego
+
+      sendBit(rw);
+
+      // dodane
+      bit_idx  = BIT_ACK;
+      SDA_ctrl = 1;
+      // koniec dodanego
     end
   endtask
   
@@ -72,14 +147,25 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
   
-  task getACK();
+  // dodane ???? ack po danych i po adresie
+  task getACK(input bit is_addr_ack = 1'b0);
     begin
+       phase   = is_addr_ack ? M_ACK_ADDR : M_ACK_DATA;
+       bit_idx = BIT_ACK;
+
        SCL_ctrl = 0;
        #LOW_PERIOD_SCL SCL_ctrl = 1;
-       #(HIGH_PERIOD_SCL/2) ack_got = ~SDA;
-       #(HIGH_PERIOD_SCL/2); 
+       #(HIGH_PERIOD_SCL/2) begin
+         ack_got  = ~SDA;     // sda 0 -> ack 1 ------ sda 1 -> nack 0
+         last_ack = ack_got;  
+       end
+       #(HIGH_PERIOD_SCL/2);
+
+       // jesli nack to eror ---- sprawdzic czy sie nie wysra w burstcie
+       if (!last_ack) phase = M_ERROR;
     end
   endtask
+  // koniec dodanego
   
   task readBit(output bit data);
     begin
@@ -92,34 +178,78 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
   task readData();
     begin
+      // dodane
+      phase = M_DATA_RX;
+      // koniec dodanego
+
       for (i = 7; i >= 0; i--) begin
+        // dodane
+      	bit_idx = i;
+        // koniec dodanego
+
       	readBit(data_got[i]);
       end
-      //sendBit(1'b0); //ack
+
+      // dodane
+      bit_idx = BIT_ACK;
       ack_got = 0;
+      // koniec dodanego
     end
   endtask
       
   task writeTransaction(input reg [6:0] addr, input reg [7:0] data); 
     begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
       sendStart();
       sendAddressRW(addr, 1'b0);
-      getACK();
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+      // koniec dodanego
+
       if(ack_got) begin
         sendData(data);
+
+        // (opcjonalnie) jeśli sprwadzamy ACK po danych
+        // dodane
+        getACK(1'b0);
+        // koniec dodanego
       end
+
       sendStop();
     end
   endtask
   
   task readTransaction(input reg [6:0] addr); 
     begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
       sendStart();
       sendAddressRW(addr, 1'b1);
-      getACK();
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
       if(ack_got) begin
         readData();
       end
+
+      // NACK po ostatnim bajcie read (master->target)
+      // dodane
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
       sendBit(1'b1);
       sendStop();
     end
@@ -127,17 +257,43 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
   task burstRead(input reg [6:0] addr, input int numBytes); 
     begin
+      // dodane
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
       sendStart();
       sendAddressRW(addr, 1'b1);
-      getACK();
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
       if(ack_got) begin
         for (i = numBytes; i > 0; i--) begin
+          // dodane
+          byte_idx = (numBytes - i);
+          // koniec dodanego
+
           readData();
           if(i>1) begin
+            // ACK po bajcie read (master potwierdza że chce kolejny)
+            // dodane
+            phase   = M_ACK_DATA;
+            bit_idx = BIT_ACK;
+            // koniec dodanego
+
             sendBit(1'b0);
           end
         end
       end
+
+      // NACK po ostatnim bajcie
+      // dodane ACK slot (master wysyła NACK=1)
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
       sendBit(1'b1);
       sendStop();
     end
@@ -145,13 +301,29 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
   task burstWrite(input reg [6:0] addr, input int numBytes, input reg [MAX_BYTES-1:0][6:0] data);
     begin
+      // dodane
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // konied dodanego
+
       sendStart();
       sendAddressRW(addr, 1'b0);
-      getACK();
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
       if(ack_got) begin
-        for(i=numBytes-1; i >= 0; i--) begin         
+        for(i=numBytes-1; i >= 0; i--) begin
+            // dodane
+            byte_idx = (numBytes-1 - i);
+            // koniec dodanego
+
             sendData(data[i]);
-            getACK();
+
+            // dodane
+            getACK(1'b0);
+            // koniec dodanego
         end
       end
       sendStop();
@@ -190,7 +362,7 @@ parameter BITS_SEND=BYTES_SEND<<3;                      //Calculation of number 
 parameter BYTES_RECEIVE=2;                              //Number of bytes to be received (controller-->target)
 parameter BITS_RECEIVE=BYTES_RECEIVE<<3;                //Calculation of number of bits to be received
 parameter ADDR_TARGET=7'b0000111;                       //Target address
-parameter STRETCH = 0;//1000                               //Number of clock cycles for clock-stretching after each address\data byte
+parameter STRETCH = 1000;//1000 0 tez dziala            //Number of clock cycles for clock-stretching after each address\data byte 
 
 //Input Deceleration
 input logic rst;                                     //Active high logic
@@ -389,7 +561,9 @@ always @(posedge clk or negedge rst)
   //Send or receive acknoledgement bit for the data frame
   else if (state==BIT_CYCLE_LOW_DATA_ACK) begin
     count_low<=count_low+$bits(count_low)'(1);
-
+    
+  if (count_low == 0)
+    SDA_tx <= 1'b1;
   if ((count_low<SDA_UPDATE) && (rw==1'b0)) 
     SDA_tx<=1'b1;
   if ((count_low==SDA_UPDATE)&&(rw==1'b0)) begin
