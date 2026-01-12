@@ -9,7 +9,7 @@
 //   rand real time stop_setup_time;
 //   rand real time rand_bit;
 
-//   constrareal time i2c_time_const {
+//   constraint i2c_time_const {
 //     // Min High: 4000ns, Min Low: 4700ns, Min Setup Time: 250ns 
 //     high_period inside {[4000:7000]}; 
 //     low_period  inside {[4700:7000]};
@@ -41,7 +41,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   bit ack_got = 0;
   bit [7:0] data_got;
-  real time i;
+  int i;
 
   // dodane
   typedef enum logic [3:0] {
@@ -63,11 +63,11 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   //   >=0  indeks bitu adresu/danych
   //   -1   slot bitu rw
   //   -2   slot ack/nack
-  localparam real time BIT_RW  = -1;
-  localparam real time BIT_ACK = -2;
+  localparam int BIT_RW  = -1;
+  localparam int BIT_ACK = -2;
 
-  real time bit_idx  = BIT_ACK;  // poza danymi
-  real time byte_idx = -1;       // poza burstem
+  int bit_idx  = BIT_ACK;  // poza danymi
+  int byte_idx = -1;       // poza burstem
   bit last_ack = 1'b0;     // 1 ack 0 nack
   // koniec dodanego
 
@@ -324,7 +324,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
 
-  task burstRead(input bit [6:0] addr, input real time numBytes); 
+  task burstRead(input bit [6:0] addr, input int numBytes); 
     begin
       // dodane
       byte_idx = -1;
@@ -368,7 +368,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
 
-  task burstWrite(input bit [6:0] addr, input real time numBytes, input bit [MAX_BYTES-1:0][6:0] data);
+  task burstWrite(input bit [6:0] addr, input int numBytes, input bit [MAX_BYTES-1:0][6:0] data);
     begin
       // dodane
       byte_idx = -1;
@@ -399,7 +399,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
   
-  task writeRandomStop(input bit [6:0] addr, input bit [7:0] data, real time randbit); 
+  task writeRandomStop(input bit [6:0] addr, input bit [7:0] data, int randbit); 
     begin
       // dodane
       phase    = M_IDLE;
@@ -462,7 +462,7 @@ parameter STRETCH = 0;//1000 0 tez dziala            //Number of clock cycles fo
 
 //Input Deceleration
 input logic rst;                                     //Active high logic
-input logic clk;                                        //target's real timeernal clock (50MHz)
+input logic clk;                                        //target's internal clock (50MHz)
 input logic [BITS_SEND-1:0] data_send;                  //Data to be sent to the controller (R/W='0')
 
 //Output deleration
@@ -472,7 +472,7 @@ output logic [BITS_RECEIVE-1:0] data_received;          //Data received from the
 inout SDA_bidir;                                        //Serial data
 inout SCL_bidir;                                        //Serial clock
 
-//real timeernal logic signals decelerations
+//internal logic signals decelerations
 logic SCL_tx;                                           //Tri-state logic - SCL output signal
 logic SCL_rx;                                           //Tri-state logic - SCL input signal
 logic SDA_tx;                                           //Tri-state logic - SDA output signal
@@ -600,7 +600,7 @@ always @(posedge clk or negedge rst)
     SCL_tx<=1'b1;
     SDA_tx<=1'b1;
   end
-  else begin                                      //Do no real timeerfere with the termination sequence carried by the controller
+  else begin                                      //Do no interfere with the termination sequence carried by the controller
     SDA_tx<=1'b1;	
     SCL_tx<=1'b1;
   end
@@ -663,16 +663,16 @@ else if (state==BIT_CYCLE_HIGH_DATA) begin
         
         data_received <= temp_byte; // Update the output buffer
 
-        // Logic to distinguish Poreal timeer vs Data
+        // Logic to distinguish Pointer vs Data
         if (count_bytes_received == 0) begin
-            // 1st Byte received: This is the bitister Address (Poreal timeer)
+            // 1st Byte received: This is the bitister Address (Pointer)
             bit_ptr <= temp_byte; 
         end
         else begin
             // 2nd+ Byte received: Write data to the bitister at bit_ptr
             bit_mem[bit_ptr[1:0]] <= temp_byte;
             
-            // Optional: Auto-increment poreal timeer if you want support for that
+            // Optional: Auto-increment pointer if you want support for that
             // bit_ptr <= bit_ptr + 1; 
         end
         // -----------------------------------------------------------
