@@ -1,19 +1,19 @@
 `timescale 1ns/10ps
 
 // class I2C_Config;
-//   rand real time high_period;
-//   rand real time low_period;
-//   rand real time setup_time;
-//   rand real time start_setup_time;
-//   rand real time start_hold_time;
-//   rand real time stop_setup_time;
-//   rand real time rand_bit;
+//   rand realtime high_period;
+//   rand realtime low_period;
+//   rand realtime setup_time;
+//   rand realtime start_setup_time;
+//   rand realtime start_hold_time;
+//   rand realtime stop_setup_time;
+//   rand realtime rand_bit;
 
 //   constraint i2c_time_const {
 //     // Min High: 4000ns, Min Low: 4700ns, Min Setup Time: 250ns 
 //     high_period inside {[4000:7000]}; 
 //     low_period  inside {[4700:7000]};
-//     setup_time  inside {[250:1000]};
+//     setup_time  inside {[250:4700]};
 //	   start_setup_time  inside {[4700:7000]};
 //     start_hold_time  inside {[4000:7000]};
 //	   stop_setup_time  inside {[4000:7000]};
@@ -23,15 +23,15 @@
 
 //wszystkie funkcje koncza tick przed negedge SCL
 module driver_I2C(input logic clk, inout SDA, inout SCL);
-  real time HIGH_PERIOD_SCL = 6000; //min - 4000ns
-  real time LOW_PERIOD_SCL = 6000; //min - 4700ns
-  real time DATA_SETUP_TIME = 300; //jak dlugo SDA stabilne przed posedge SCL
-  real time DATA_HOLD_TIME = LOW_PERIOD_SCL - DATA_SETUP_TIME; //jak dlugo SDA stabilne po negedge SCL
-  real time RAND_STOP_BIT = 7;
-  real time START_SETUP_TIME = 4700 //min - 4700ns - repeated start
-  real time START_HOLD_TIME = 4000 //min - 4000ns
-  real time STOP_SETUP_TIME = 4000 //min - 4000ns
-  real time BUFF_TIME = 4700 //min - 4700ns - time buffer pomiedzy stop i start
+  realtime HIGH_PERIOD_SCL = 6000; //min - 4000ns
+  realtime LOW_PERIOD_SCL = 6000; //min - 4700ns
+  realtime DATA_SETUP_TIME = 4700; //jak dlugo SDA stabilne przed posedge SCL
+  realtime DATA_HOLD_TIME = LOW_PERIOD_SCL - DATA_SETUP_TIME; //jak dlugo SDA stabilne po negedge SCL
+  realtime RAND_STOP_BIT = 7;
+  realtime START_SETUP_TIME = 4700; //min - 4700ns - repeated start
+  realtime START_HOLD_TIME = 4000; //min - 4000ns
+  realtime STOP_SETUP_TIME = 4000; //min - 4000ns
+  realtime BUFF_TIME = 4700; //min - 4700ns - time buffer pomiedzy stop i start
   localparam MAX_BYTES = 32; //max liczba bajtow do burst write
 
   logic SDA_ctrl = 1;
