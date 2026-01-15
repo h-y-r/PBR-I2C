@@ -21,6 +21,7 @@
 //   }
 // endclass
 
+
 //wszystkie funkcje koncza tick przed negedge SCL
 module driver_I2C(input logic clk, inout SDA, inout SCL);
   realtime HIGH_PERIOD_SCL = 6000; //min - 4000ns
@@ -59,6 +60,28 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
   master_phase_e phase = M_IDLE;
 
+    class Transaction;
+    bit [6:0] address;
+    bit rw;
+    int readlen;
+    bit [7:0]data[$];
+
+    function new(bit [6:0] addr, bit rwSet, int r_len = 0, bit [7:0] data_to_send [$] = {});
+      address = addr;
+      rw = rwSet;
+      data = data_to_send;
+      readlen = r_len;
+    endfunction : new
+  endclass
+
+  typedef mailbox #(Transaction) tr_mbx;
+
+  tr_mbx tr_mailbox;
+ 
+  initial begin
+   tr_mailbox = new();//mailbox na transakcje
+  end
+
   // konwencja bit_idx
   //   >=0  indeks bitu adresu/danych
   //   -1   slot bitu rw
@@ -69,6 +92,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   int bit_idx  = BIT_ACK;  // poza danymi
   int byte_idx = -1;       // poza burstem
   bit last_ack = 1'b0;     // 1 ack 0 nack
+  
   // koniec dodanego
 
   
@@ -368,8 +392,10 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     end
   endtask
 
-  task burstWrite(input bit [6:0] addr, input int numBytes, input bit [MAX_BYTES-1:0][6:0] data);
+  task burstWrite(input bit [6:0] addr, input bit [7:0] data [$]);
+    int numBytes;
     begin
+      numBytes = data.size();
       // dodane
       byte_idx = -1;
       bit_idx  = BIT_ACK;
@@ -383,12 +409,12 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       // koniec dodanego
 
       if(ack_got) begin
-        for(i=numBytes-1; i >= 0; i--) begin
+        foreach (data[j]) begin
             // dodane
-            byte_idx = (numBytes-1 - i);
+            byte_idx = (numBytes-1 - j);
             // koniec dodanego
 
-            sendData(data[i]);
+            sendData(data[j]);
 
             // dodane
             getACK(1'b0);
@@ -424,6 +450,29 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       end          
       sendStop();
     end
+  endtask
+
+task transactionDriver();
+  begin
+    Transaction tr;
+    forever begin
+      tr_mailbox.get(tr); // Wait for new transaction
+
+      if(tr.rw == 0) begin // Write
+        if (tr.data.size() == 1) begin
+          writeTransaction(tr.address, tr.data.pop_front());
+        end else if (tr.data.size() > 1) begin // Fixed logical comparison
+          burstWrite(tr.address, tr.data);
+        end
+      end else begin // Read
+        if(tr.readlen == 1) begin
+          readTransaction(tr.address);
+        end else if(tr.readlen > 1) begin
+          burstRead(tr.address, tr.readlen);
+        end
+      end
+    end
+  end
   endtask
 
 endmodule
