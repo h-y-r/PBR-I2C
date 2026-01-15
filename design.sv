@@ -438,11 +438,13 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
       // dodane ack po adresie 
       getACK(1'b1);
-      // koniec dodanego
-
+    	  // koniec dodanego
+	phase = M_DATA_TX;
       if(ack_got) begin
         for (i = 7; i >= 7-randbit; i--) begin
+          bit_idx  = i;
           sendBit(data[i]);
+          
         end
         // (opcjonalnie) jeśli sprwadzamy ACK po danych
         // dodane
