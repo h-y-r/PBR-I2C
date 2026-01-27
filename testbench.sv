@@ -37,8 +37,8 @@ module testbench;
     i2c_cfg = new();
      if (!i2c_cfg.randomize()) begin
        $error("blad");
-       $finish;
      end
+	  
      dv_i2c.HIGH_PERIOD_SCL = i2c_cfg.high_period;
      dv_i2c.LOW_PERIOD_SCL  = i2c_cfg.low_period;
      dv_i2c.DATA_SETUP_TIME = i2c_cfg.setup_time;
