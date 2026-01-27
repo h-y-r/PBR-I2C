@@ -66,7 +66,10 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   tr_mbx tr_mailbox;
  
   initial begin
-   tr_mailbox = new();//mailbox na transakcje
+    tr_mailbox = new();//mailbox na transakcje
+    fork
+      dv_i2c.transactionDriver();
+    join_none
   end
 
   // konwencja bit_idx
