@@ -59,7 +59,8 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
     M_DONE,      // wszystko OK
     M_ERROR,      // blad nack po adresie czy cos
 	M_ADDR_10BIT, //adresowanie 10 bit
-	M_DEVICE_ID //zbiera ID od slave'a
+	M_DEVICE_ID, //zbiera ID od slave'a
+	M_SEND_ADDR_FOR_ID  
   } master_phase_e;
 
   master_phase_e phase = M_IDLE;
@@ -501,6 +502,7 @@ task getDeviceID(input bit [6:0] addr)
     SDA_ctrl = 1;
 	getACK(1'b1);
 	
+	phase = M_SEND_ADDR_FOR_ID;
 	for (i = 6; i >= 0; i--) begin
         bit_idx = i;
         sendBit(addr[i]);
