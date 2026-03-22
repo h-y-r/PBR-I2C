@@ -19,6 +19,21 @@ event assert_chk_RWBitRead;
 event assert_chk_targetDoesNotGenerateStop;
 
 
+property DATA_TRANSFER_FROM_MSB; //tez sprawdza czy 8 bitów
+	bit [7:0] sampleBits;
+	@(posedge testbench.SCL)
+	(`DRIVER.phase == M_DATA_RX) && (bit_idx == 7)
+	##1 (sampleBits[7] = testbench.SDA)
+	##1 (sampleBits[6] = testbench.SDA)
+	##1 (sampleBits[5] = testbench.SDA)
+	##1 (sampleBits[4] = testbench.SDA)
+	##1 (sampleBits[3] = testbench.SDA)
+	##1 (sampleBits[2] = testbench.SDA)
+	##1 (sampleBits[1] = testbench.SDA)
+	##1 (sampleBits[0] = testbench.SDA)
+	|-> (sampleBits == TARGET_BITS);
+endproperty
+
 initial begin
 	Transaction tr;
 
@@ -80,5 +95,8 @@ always @(assert_chk_RWBitRead) begin
 	chk_RWBitRead : assert(RW_BIT) $display("chk_RWBitRead PASSED");
 					else $error("chk_RWBitRead FAILED");
 end
+
+chk_dataFromMSB: assert property (DATA_TRANSFER_FROM_MSB) $display("dataFromMSB PASSED!");
+				 else $error("dataFromMSB FAILED!");
 
 endmodule

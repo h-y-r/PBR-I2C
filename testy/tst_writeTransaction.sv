@@ -14,7 +14,12 @@ event assert_chk_ackAfterByte;
 event assert_chk_addressExists;
 event assert_chk_RWBitWrite;
 
-
+property ACK_AFTER_DATA;
+	@(posedge testbench.SCL)
+	(`DRIVER.phase == M_DATA_TX) && (`DRIVER.bit_idx == BIT_ACK)
+	|->
+	(`DRIVER.ack_got == 1'b1;)
+endproperty	
 
 initial begin
 	Transaction tr;
@@ -71,5 +76,8 @@ always @(assert_chk_RWBitWrite) begin
 	chk_RWBitWrite : assert(RW_BIT) $display("chk_RWBitWrite PASSED");
 					 else $error("chk_RWBitWrite FAILED");
 end
+
+chk_ackAfterData: assert property (ACK_AFTER_DATA) $display("chk_ackAfterData PASSED!");
+				  else $error("chk_ackAfterData FAILED!");
 
 endmodule
