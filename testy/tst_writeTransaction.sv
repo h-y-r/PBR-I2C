@@ -8,9 +8,11 @@ module tst_writeTransaction;
 // Deklaracje zmiennych
 bit ACK_AFTER_BYTE;
 bit ACK_AFTER_ADDR;
+bit RW_BIT;
 
 event assert_chk_ackAfterByte;
 event assert_chk_addressExists;
+event assert_chk_RWBitWrite;
 
 
 initial begin
@@ -39,6 +41,8 @@ initial begin
 	`MAIL.put(tr);
 
 	wait (`DRIVER.phase == M_ACK_ADDR);
+	RW_BIT = (!`TARGET.rw);
+	-> assert_chk_RWBitWrite;
 	wait (`DRIVER.phase == M_DATA_TX);
 	ACK_AFTER_ADDR = `DRIVER.last_ack;
 	-> assert_chk_addressExists;
@@ -60,6 +64,11 @@ end
 always @(assert_chk_addressExists) begin
 	chk_addressExists : assert(ACK_AFTER_ADDR) $display("chk_addressExists PASSED");
 						else $error("chk_addressExists FAILED");
+end
+
+always @(assert_chk_RWBitWrite) begin
+	chk_RWBitWrite : assert(RW_BIT) $display("chk_RWBitWrite PASSED");
+					else $error("chk_RWBitWrite FAILED");
 end
 
 endmodule

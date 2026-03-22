@@ -7,11 +7,13 @@ module tst_readTransaction;
 
 // Deklaracje zmiennych
 bit DATA_STABLE = 1;
+bit RW_BIT;
 
 bit prev_sda;
 realtime DATA_UNSTABLE_time;
 
 event assert_chk_dataStableWhenSCLHigh;
+event assert_chk_RWBitRead;
 
 
 initial begin
@@ -40,6 +42,9 @@ initial begin
 	
 	`MAIL.put(tr);
 	
+	wait (`DRIVER.phase == M_ACK_ADDR);
+	RW_BIT = (`TARGET.rw);
+	-> assert_chk_RWBitRead;
 	wait (`DRIVER.phase == M_DONE);
 	-> assert_chk_dataStableWhenSCLHigh;
 	$finish();
@@ -59,7 +64,9 @@ always @(assert_chk_dataStableWhenSCLHigh) begin
 								else $error("chk_dataStableWhenSCLHigh FAILED at time %0t", DATA_UNSTABLE_time);
 end
 
-
-
+always @(assert_chk_RWBitRead) begin
+	chk_RWBitRead : assert(RW_BIT) $display("chk_RWBitRead PASSED");
+					else $error("chk_RWBitRead FAILED");
+end
 
 endmodule
