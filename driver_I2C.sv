@@ -61,7 +61,8 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 	M_ADDR_10BIT, //adresowanie 10 bit
 	M_DEVICE_ID, //zbiera ID od slave'a
 	M_SEND_ADDR_FOR_ID,
-	M_SR
+	M_SR,
+	M_GENERAL_CALL
   } master_phase_e;
 
   master_phase_e phase = M_IDLE;
@@ -88,7 +89,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   int byte_idx = -1;       // poza burstem
   bit last_ack = 1'b0;     // 1 ack 0 nack
   bit [6:0] curr_addr;	
-  
+  int selected_call;
   // koniec dodanego
 
   
@@ -110,24 +111,20 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   task sendStop();
     begin
-      if (tr_mailbox.num !=0) begin
-        sendRepeatedStart();
-      end else begin
-        // dodane
-        phase   = M_STOP;
-        bit_idx = BIT_ACK;
-        // koniec dodanego
+      // dodane
+      phase   = M_STOP;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
 
-        SCL_ctrl = 0;
-        #DATA_SETUP_TIME SDA_ctrl = 0;
-        #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
-  	  #(STOP_SETUP_TIME) SDA_ctrl = 1;
-  	  #(BUFF_TIME);
-  		
-        // dodane
-        phase = M_DONE;
-        // koniec dodanego
-      end
+      SCL_ctrl = 0;
+      #DATA_SETUP_TIME SDA_ctrl = 0;
+      #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
+	  #(STOP_SETUP_TIME) SDA_ctrl = 1;
+	  #(BUFF_TIME);
+		
+      // dodane
+      phase = M_DONE;
+      // koniec dodanego
     end
   endtask
 
@@ -1113,7 +1110,7 @@ task sendAdress10Bit(input bit [9:0] addr, input bit rw);
     getACK(1'b1); 		
 endtask
 
-task getDeviceID(input bit [6:0] addr)
+task getDeviceID(input bit [6:0] addr);
 	bit [7:0] devID1 = 8'b11111000;
 	bit [7:0] devID2 = 8'b11111001;
 	phase = M_DEVICE_ID;	
@@ -1166,6 +1163,75 @@ task getDeviceID(input bit [6:0] addr)
 	sendStop();
 	
 endtask
+
+task generalCalls(bit [1:0] callSelect);
+	bit [7:0] reset_write = 8'b00000110;
+	bit [7:0] write = 8'b00000100;
+	bit [7:0] hardware_call = 8'b00000001; //dummy plus bit B = 1;
+	
+	sendStart();
+	
+	phase = M_GENERAL_CALL;
+	
+	for (i = 7; i >= 0; i--) begin //first byte
+        bit_idx = i;
+        sendBit(1'b0);
+    end
+	
+	SDA_ctrl = 1;
+	getACK(1'b1);
+	
+	if(ack_got) begin
+		ack_got = 0;
+		case (callSelect)
+			2'b00: //reset and write (06h)
+				begin
+				selected_call = RESET;
+					for (i = 7; i >= 0; i--) begin
+						bit_idx = i;
+						sendBit(reset_write[i]);
+					end
+					getACK(1'b1);
+				end
+			2'b01: //write (04h)
+				begin
+				selected_call = WRITE;
+					for (i = 7; i >= 0; i--) begin
+						bit_idx = i;
+						sendBit(write[i]);
+					end
+					getACK(1'b1);
+				end
+			2'b10: //nielegalny call (00h)
+				begin
+				selected_call = ILLEGAL;
+					for (i = 7; i >= 0; i--) begin
+						bit_idx = i;
+						sendBit(1'b0);
+					end
+					getACK(1'b1);
+				end
+			2'b11: //hardware call (B = 1)
+				begin
+				selected_call = HARDWARE;
+					for (i = 7; i >= 0; i--) begin
+						bit_idx = i;
+						sendBit(hardware_call[i]);
+					end
+					getACK(1'b1);
+					if(ack_got) begin
+						for (i = 7; i >= 0; i--) begin
+							bit_idx = i;
+							sendBit(8b'10101010); //random data
+						end
+					getACK(1'b1);
+					sendStop();
+				end
+		endcase
+			
+	end
+endtask
+
 			
 task transactionDriver();
   begin
