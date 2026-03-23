@@ -70,7 +70,7 @@ initial begin
 end
 
 always @(posedge testbench.clk) begin
-	if(testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda && (`DRIVER.phase != M_STOP || `DRIVER.phase != M_START)) begin
+	if(testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && `DRIVER.phase != M_START) begin
 		DATA_UNSTABLE_time = $realtime();
 		DATA_STABLE = 0;
 	end
