@@ -1,8 +1,12 @@
 `define DRIVER testbench.dv_i2c
 `define TARGET testbench.tg_i2c
 `define MAIL testbench.dv_i2c.tr_mailbox
-`define RAND testbench.dv_i2c.i2c_cfg
+`define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
+`define TARGET_BITS testbench.tg_i2c.data_send 
+
+import transaction_class::*;
+
 module tst_readTransaction;
 
 // Deklaracje zmiennych
@@ -14,51 +18,53 @@ bit prev_sda;
 realtime DATA_UNSTABLE_time;
 realtime STOP_time;
 
+bit start_assert = 0;
 event assert_chk_dataStableWhenSCLHigh;
 event assert_chk_RWBitRead;
 event assert_chk_targetDoesNotGenerateStop;
 
 
 property DATA_TRANSFER_FROM_MSB; //tez sprawdza czy 8 bitów
-	bit [7:0] sampleBits;
+	logic [7:0] sampleBits;
 	@(posedge testbench.SCL)
-	(`DRIVER.phase == M_DATA_RX) && (bit_idx == 7)
-	##1 (sampleBits[7] = testbench.SDA)
-	##1 (sampleBits[6] = testbench.SDA)
-	##1 (sampleBits[5] = testbench.SDA)
-	##1 (sampleBits[4] = testbench.SDA)
-	##1 (sampleBits[3] = testbench.SDA)
-	##1 (sampleBits[2] = testbench.SDA)
-	##1 (sampleBits[1] = testbench.SDA)
-	##1 (sampleBits[0] = testbench.SDA)
-	|-> (sampleBits == TARGET_BITS);
+	(`DRIVER.phase == M_DATA_RX) && (`DRIVER.bit_idx == 7)
+	##0 (1, sampleBits[7] = testbench.SDA)
+	##1 (1, sampleBits[6] = testbench.SDA)
+	##1 (1, sampleBits[5] = testbench.SDA)
+	##1 (1, sampleBits[4] = testbench.SDA)
+	##1 (1, sampleBits[3] = testbench.SDA)
+	##1 (1, sampleBits[2] = testbench.SDA)
+	##1 (1, sampleBits[1] = testbench.SDA)
+	##1 (1, sampleBits[0] = testbench.SDA)
+	|-> (sampleBits == `TARGET_BITS[15:8]);
 endproperty
 
 initial begin
 	Transaction tr;
 
-	RAND = new();
-	if (!RAND.randomize()) begin
+	`RAND = new();
+	if (!`RAND.randomize()) begin
 	$error("blad");
 	end
 
-	DRIVER.HIGH_PERIOD_SCL = RAND.high_period;
-	DRIVER.LOW_PERIOD_SCL  = RAND.low_period;
-	DRIVER.DATA_SETUP_TIME = RAND.setup_time;
-	DRIVER.RAND_STOP_BIT = RAND.rand_bit;
-	DRIVER.START_SETUP_TIME = RAND.start_setup_time;
-	DRIVER.START_HOLD_TIME = RAND.start_hold_time;
-	DRIVER.STOP_SETUP_TIME = RAND.stop_setup_time;
-	DRIVER.DATA_HOLD_TIME = DRIVER.LOW_PERIOD_SCL - DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
+	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
+	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
+	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
+	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
+	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
+	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
 	
 	tr = new(
-        .address(7'b0010000), 
-        .rw(1), 
+        .addr(7'b0000111), 
+        .rwSet(1), 
         .r_len(2)
     );
 	
 	`MAIL.put(tr);
+	start_assert = 1;
 	
 	wait (`DRIVER.phase == M_ACK_ADDR);
 	RW_BIT = (`TARGET.rw);
@@ -66,15 +72,16 @@ initial begin
 	wait (`DRIVER.phase == M_DONE);
 	-> assert_chk_dataStableWhenSCLHigh;
 	-> assert_chk_targetDoesNotGenerateStop;
+	#10;
 	$finish();
 end
 
 always @(posedge testbench.clk) begin
-	if(testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && `DRIVER.phase != M_START) begin
+	if(testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && `DRIVER.phase != M_START && start_assert) begin
 		DATA_UNSTABLE_time = $realtime();
 		DATA_STABLE = 0;
 	end
-	if(prev_sda == 0 && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && NO_STOP) begin
+	if(testbench.SCL == 1 && prev_sda == 0 && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && NO_STOP && start_assert) begin
 		STOP_time = $realtime();
 		NO_STOP = 0;
 	end 

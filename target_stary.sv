@@ -1,6 +1,6 @@
 //I2C Target - Standard I2C protocol (fSCL up to 100kHz)
 
-module target_I2C(rst,clk,data_send,SDA_bidir,SCL_bidir,data_received);
+module target_stary(rst,clk,data_send,SDA_bidir,SCL_bidir,data_received);
 
 //Parameter declarations
 localparam IDLE=0;                                      //IDLE state
@@ -24,10 +24,10 @@ parameter THIGH_SAMPLE=50;                              //Sampling instance of t
 //Application parameters
 parameter BYTES_SEND = 2;                               //Number of bytes to be sent (target-->controller)
 parameter BITS_SEND=BYTES_SEND<<3;                      //Calculation of number of bit to be sent
-parameter BYTES_RECEIVE=2;                              //Number of bytes to be received (controller-->target)
+parameter BYTES_RECEIVE=1;                              //Number of bytes to be received (controller-->target)
 parameter BITS_RECEIVE=BYTES_RECEIVE<<3;                //Calculation of number of bits to be received
 parameter ADDR_TARGET=7'b0000111;                       //Target address
-parameter STRETCH = 0;                               //Number of clock cycles for clock-stretching after each address\data byte
+parameter STRETCH = 0;                                  //Number of clock cycles for clock-stretching after each address\data byte
 
 //Input Deceleration
 input logic rst;                                        //Active high logic

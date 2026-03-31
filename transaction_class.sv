@@ -12,4 +12,29 @@ package transaction_class;
       readlen = r_len;
     endfunction : new
   endclass
+
+  typedef enum logic [3:0] {
+    M_IDLE,      
+    M_START,     
+    M_ADDR,      
+    M_ACK_ADDR,  
+    M_DATA_TX,   
+    M_ACK_DATA,  
+    M_DATA_RX,   
+    M_STOP,      
+    M_DONE,      
+    M_ERROR,      
+    M_ADDR_10BIT, 
+    M_DEVICE_ID, 
+    M_SEND_ADDR_FOR_ID,
+    M_SR,
+    M_GENERAL_CALL
+  } master_phase_e;
+
+  typedef enum logic [1:0] {
+    RESET,
+    WRITE,
+    ILLEGAL,
+    HARDWARE
+  } call_phase;
 endpackage
