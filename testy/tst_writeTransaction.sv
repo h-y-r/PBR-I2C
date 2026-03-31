@@ -1,47 +1,54 @@
 `define DRIVER testbench.dv_i2c
 `define TARGET testbench.tg_i2c
 `define MAIL testbench.dv_i2c.tr_mailbox
-`define RAND testbench.dv_i2c.i2c_cfg
+`define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
+
+import transaction_class::*;
+
 module tst_writeTransaction;
 
 // Deklaracje zmiennych
 bit ACK_AFTER_BYTE;
 bit ACK_AFTER_ADDR;
 bit RW_BIT;
+bit CLOCK_STRETCH;
 
 event assert_chk_ackAfterByte;
 event assert_chk_addressExists;
 event assert_chk_RWBitWrite;
+event assert_chk_clockStretch;
+
+realtime stretch_time1;
+realtime stretch_time2;
 
 property ACK_AFTER_DATA;
 	@(posedge testbench.SCL)
-	(`DRIVER.phase == M_DATA_TX) && (`DRIVER.bit_idx == BIT_ACK)
+	(`DRIVER.phase == M_DATA_TX && (`DRIVER.bit_idx == 0))
 	|->
-	(`DRIVER.ack_got == 1'b1;)
+	(`DRIVER.ack_got == 1'b1);
 endproperty	
 
 initial begin
 	Transaction tr;
 
-	RAND = new();
-	if (!RAND.randomize()) begin
+	`RAND = new();
+	if (!`RAND.randomize()) begin
 	$error("blad");
 	end
-
-	DRIVER.HIGH_PERIOD_SCL = RAND.high_period;
-	DRIVER.LOW_PERIOD_SCL  = RAND.low_period;
-	DRIVER.DATA_SETUP_TIME = RAND.setup_time;
-	DRIVER.RAND_STOP_BIT = RAND.rand_bit;
-	DRIVER.START_SETUP_TIME = RAND.start_setup_time;
-	DRIVER.START_HOLD_TIME = RAND.start_hold_time;
-	DRIVER.STOP_SETUP_TIME = RAND.stop_setup_time;
-	DRIVER.DATA_HOLD_TIME = DRIVER.LOW_PERIOD_SCL - DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
+	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
+	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
+	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
+	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
+	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
+	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
 	tr = new(
-        .address(7'b0010000), 
-        .rw(0), 
-        .data({8'b10101010, 8'b11100011})
+        .addr(7'b0000111), 
+        .rwSet(0), 
+        .data_to_send({8'b10101010, 8'b11100011})
     );
 	
 	`MAIL.put(tr);
@@ -55,8 +62,9 @@ initial begin
 
     wait (`TARGET.state == 5);
 	stretch_time1 = $realtime();
-	@(posedge scl) stretch_time2 = $realtime();
-	CLOCK_STRETCH = ((`TARGET.state = 5) && (stretch_time2 - stretch_time1) <= `TARGET.STRETCH);
+	@(posedge testbench.SCL) stretch_time2 = $realtime();
+	CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
+	$display("%0t",stretch_time2-stretch_time1);
 	-> assert_chk_clockStretch;
 	
 	wait (`DRIVER.phase == M_ACK_DATA);

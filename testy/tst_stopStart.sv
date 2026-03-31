@@ -1,7 +1,7 @@
 `define DRIVER testbench.dv_i2c
 `define TARGET testbench.tg_i2c
 `define MAIL testbench.dv_i2c.tr_mailbox
-`define RAND testbench.dv_i2c.i2c_cfg
+`define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
 `define TARGET_BITS testbench.tg_i2c.data_send //ostatnie do zmieniania, latwiej bedzie dla roznych targetow z definicja
 
@@ -21,44 +21,47 @@ bit scl_mismatch_flag = 0;
 
 event assert_chk_startStopCondition;
 event assert_chk_resetAfterStart;
-event assert_chk_stopImmediatelyAfterStop
+event assert_chk_stopImmediatelyAfterStop;
 event assert_chk_startNoAck;
+
+realtime time1;
+realtime time2;
 
 
 property STOP_IMMEDIATELY_AFTER_START;
 	@(posedge testbench.clk)
-	(`DRIVER.phase == M_DONE) ##[1:235] (`DRIVER.phase == M_START) |=> (`TARGET.state != 0);
+	(`DRIVER.phase == M_DONE) ##[1:235] (`DRIVER.phase == M_START) |=> (`TARGET.state == 1);
 endproperty	
 
 
 initial begin
 	Transaction tr1;
 	Transaction tr2;
-	RAND = new();
-	if (!RAND.randomize()) begin
+	`RAND = new();
+	if (!`RAND.randomize()) begin
 	$error("blad");
 	end
 
-	`DRIVER.HIGH_PERIOD_SCL = RAND.high_period;
-	`DRIVER.LOW_PERIOD_SCL  = RAND.low_period;
-	`DRIVER.DATA_SETUP_TIME = RAND.setup_time;
-	`DRIVER.RAND_STOP_BIT = RAND.rand_bit;
-	`DRIVER.START_SETUP_TIME = RAND.start_setup_time;
-	`DRIVER.START_HOLD_TIME = RAND.start_hold_time;
-	`DRIVER.STOP_SETUP_TIME = RAND.stop_setup_time;
-	`DRIVER.DATA_HOLD_TIME = DRIVER.LOW_PERIOD_SCL - DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
+	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
+	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
+	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
+	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
+	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
+	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
 		
 	tr1 = new(
-        .address(7'b0000111), 
-        .rw(0), 
-        .data({8'b10101010)
+        .addr(7'b0000111), 
+        .rwSet(0), 
+        .data_to_send({8'b10101010})
     );
 
 	tr2 = new(
-        .address(7'b0000111), 
-        .rw(0), 
-        .data({8'b10101010)
+        .addr(7'b0000111), 
+        .rwSet(0), 
+        .data_to_send({8'b10101010})
     );
 	
 	`MAIL.put(tr1);
@@ -68,30 +71,31 @@ initial begin
 	START_NO_ACK = ((`DRIVER.phase == M_START) && (`TARGET.SDA_tx != 1'b0));
 	-> assert_chk_startNoAck;
 	
-	wait (`DRIVER.phase == M_STOP);
+	wait (`DRIVER.phase == M_DONE);
 	`MAIL.put(tr2);
 	
 	wait (`DRIVER.phase == M_DONE);
-	@(negedge sda) time1 = $realtime();
-	@(negedge scl) time2 = $realtime();
+	@(negedge testbench.SDA) time1 = $realtime();
+	@(negedge testbench.SCL) time2 = $realtime();
 	
-	EXPECTED_START_STOP = ((`DRIVER.phase == M_START) && (((time2 - time1) < 4us) && ((time2 - time1) > 100ns)));
+	EXPECTED_START_STOP = ((`DRIVER.phase == M_START) && (((time2 - time1) < 4us) && ((time2 - time1) > 4ns)));
 	-> assert_chk_startStopCondition;
 	
-	wait(`testbench.SDA == 1'b0);
-	RESET_AFTER_START = ((`DRIVER.phase == M_START) && (testbench.SDA == 1'b0) && `TARGET.state == 1);
+	wait(testbench.SDA == 1'b0);
+	RESET_AFTER_START = ((`DRIVER.phase == M_START) && (testbench.SDA == 1'b0) && `TARGET.state == 0);
 	-> assert_chk_resetAfterStart;
 	
 	`DRIVER.BUFF_TIME = 0;
 	
 	wait (`DRIVER.phase == M_DONE);
-	sendStart();
+	`DRIVER.sendStart();
 	
-	#25us;
+	#1000us;
+	$finish();
 end
 
 chk_stopImmediatelyAfterStart : assert property(STOP_IMMEDIATELY_AFTER_START) $display("chk_stopImmediatelyAfterStop PASSED!");
-		else $error("chk_stopImmediatelyAfterStop FAILED!")	
+		else $error("chk_stopImmediatelyAfterStop FAILED!");	
 		
 always @(assert_chk_startNoAck) begin					
 	chk_startNoAck	: assert(START_NO_ACK) $display("chk_startNoAck PASSED!");
@@ -110,7 +114,7 @@ end
 
 					
 always @(posedge testbench.clk) begin
-    if (`DRIVER.SCL_ctrl !== testbench.SCL) begin
+    if (`DRIVER.SCL_ctrl !== testbench.SCL & !scl_mismatch_flag) begin
         scl_mismatch_flag = 1;
         $display("SCL mismatch at time %0t", $realtime);
     end

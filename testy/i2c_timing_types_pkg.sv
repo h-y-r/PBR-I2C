@@ -35,75 +35,65 @@ package i2c_timing_types_pkg;
     return cfg;
   endfunction
 
-
   function automatic i2c_timing_cfg_t get_fast_mode_cfg();
     i2c_timing_cfg_t cfg;
-
-
-    cfg.T_SCL_MIN        = ; 
-    cfg.T_HD_STA_MIN     = ;
-    cfg.T_SU_STA_MIN     = ;
-    cfg.T_SU_DAT_MIN     = ;
-    cfg.T_HD_DAT_MIN     = ;
-    cfg.T_SU_STO_MIN     = ;
-    cfg.T_BUF_MIN        = ;
-    cfg.T_DATA_VALID_GUARD = ;
+    cfg.T_SCL_MIN        = 0ns; 
+    cfg.T_HD_STA_MIN     = 0ns;
+    cfg.T_SU_STA_MIN     = 0ns;
+    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_HD_DAT_MIN     = 0ns;
+    cfg.T_SU_STO_MIN     = 0ns;
+    cfg.T_BUF_MIN        = 0ns;
+    cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
   endfunction
-
 
   function automatic i2c_timing_cfg_t get_fast_mode_plus_cfg();
     i2c_timing_cfg_t cfg;
 
-    cfg.T_SCL_MIN        = ;
-    cfg.T_HD_STA_MIN     = ;
-    cfg.T_SU_STA_MIN     = ;
-    cfg.T_SU_DAT_MIN     = ;
-    cfg.T_HD_DAT_MIN     = ;
-    cfg.T_SU_STO_MIN     = ;
-    cfg.T_BUF_MIN        = ;
-    cfg.T_DATA_VALID_GUARD = ;
+    cfg.T_SCL_MIN        = 0ns;
+    cfg.T_HD_STA_MIN     = 0ns;
+    cfg.T_SU_STA_MIN     = 0ns;
+    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_HD_DAT_MIN     = 0ns;
+    cfg.T_SU_STO_MIN     = 0ns;
+    cfg.T_BUF_MIN        = 0ns;
+    cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
   endfunction
-
-
 
   function automatic i2c_timing_cfg_t get_high_speed_cfg();
     i2c_timing_cfg_t cfg;
 
-    cfg.T_SCL_MIN        = ;  
-    cfg.T_HD_STA_MIN     = ;
-    cfg.T_SU_STA_MIN     = ;
-    cfg.T_SU_DAT_MIN     = ;
-    cfg.T_HD_DAT_MIN     = ;
-    cfg.T_SU_STO_MIN     = ;
-    cfg.T_BUF_MIN        = ;
-    cfg.T_DATA_VALID_GUARD = ;
+    cfg.T_SCL_MIN        = 0ns;  
+    cfg.T_HD_STA_MIN     = 0ns;
+    cfg.T_SU_STA_MIN     = 0ns;
+    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_HD_DAT_MIN     = 0ns;
+    cfg.T_SU_STO_MIN     = 0ns;
+    cfg.T_BUF_MIN        = 0ns;
+    cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
   endfunction
-
 
   function automatic i2c_timing_cfg_t get_ultra_fast_cfg();
     i2c_timing_cfg_t cfg;
-
   
-    cfg.T_SCL_MIN        = ; 
-    cfg.T_HD_STA_MIN     = ;
-    cfg.T_SU_STA_MIN     = ;
-    cfg.T_SU_DAT_MIN     = ;
-    cfg.T_HD_DAT_MIN     = ;
-    cfg.T_SU_STO_MIN     = ;
-    cfg.T_BUF_MIN        = ;
-    cfg.T_DATA_VALID_GUARD = ;
+    cfg.T_SCL_MIN        = 0ns; 
+    cfg.T_HD_STA_MIN     = 0ns;
+    cfg.T_SU_STA_MIN     = 0ns;
+    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_HD_DAT_MIN     = 0ns;
+    cfg.T_SU_STO_MIN     = 0ns;
+    cfg.T_BUF_MIN        = 0ns;
+    cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
   endfunction
 
-
-  
   typedef enum int unsigned {
     MODE_STD,
     MODE_FAST,
