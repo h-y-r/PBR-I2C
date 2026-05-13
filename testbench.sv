@@ -1,3 +1,4 @@
+`define MAIL testbench.dv_i2c.tr_mailbox
 `timescale 1ns/10ps
 import transaction_class::*;
 
@@ -56,9 +57,7 @@ module testbench;
     rst = 0; 
     #10;
     rst = 1;
-
-    #1000000;
-    //$finish(0);
+    #10;
   end
 
 endmodule

@@ -44,9 +44,9 @@ initial begin
 
     `RAND = new();
     #100ns;
-
-    for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
-
+            if (!`RAND.randomize()) begin
+            $error("blad");
+        end
         `DRIVER.HIGH_PERIOD_SCL   = `RAND.high_period;
         `DRIVER.LOW_PERIOD_SCL    = `RAND.low_period;
         `DRIVER.DATA_SETUP_TIME   = `RAND.setup_time;
@@ -56,6 +56,7 @@ initial begin
         `DRIVER.STOP_SETUP_TIME   = `RAND.stop_setup_time;
         `DRIVER.DATA_HOLD_TIME    = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
 
+    for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
         DATA_STABLE  = 1;
         NO_STOP      = 1;
         start_assert = 0;
