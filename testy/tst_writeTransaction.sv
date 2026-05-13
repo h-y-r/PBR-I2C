@@ -37,7 +37,7 @@ endproperty
 
 initial begin
 	Transaction tr;
-	data random_bytes;
+	data random_bytes = new();
 
 	`RAND = new();
 	if (!`RAND.randomize()) begin
