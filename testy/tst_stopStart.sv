@@ -7,6 +7,11 @@
 
 import transaction_class::*;
 
+class data;
+	rand logic [7:0] byte1;
+	rand logic [7:0] byte2;
+endclass
+
 module test;
 
 // Deklaracje zmiennych
@@ -27,6 +32,8 @@ event assert_chk_startNoAck;
 realtime time1;
 realtime time2;
 
+parameter int NUM_TRANSACTIONS = 20;
+
 
 property STOP_IMMEDIATELY_AFTER_START;
 	@(posedge testbench.clk)
@@ -37,6 +44,7 @@ endproperty
 initial begin
 	Transaction tr1;
 	Transaction tr2;
+	data randdata = new();
 	`RAND = new();
 	if (!`RAND.randomize()) begin
 	$error("blad");
@@ -51,46 +59,50 @@ initial begin
 	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
 	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
-		
-	tr1 = new(
-        .addr(7'b0000111), 
-        .rwSet(0), 
-        .data_to_send({8'b10101010})
-    );
+	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
+		if (!randdata.randomize()) begin
+		$error("blad");
+		end	
+		tr1 = new(
+	        .addr(7'b0000111), 
+	        .rwSet(0), 
+	        .data_to_send({randdata.byte1})
+	    );
 
-	tr2 = new(
-        .addr(7'b0000111), 
-        .rwSet(0), 
-        .data_to_send({8'b10101010})
-    );
-	
-	`MAIL.put(tr1);
-	
-	wait (`DRIVER.phase == M_START);
-	
-	START_NO_ACK = ((`DRIVER.phase == M_START) && (`TARGET.SDA_tx != 1'b0));
-	-> assert_chk_startNoAck;
-	
-	wait (`DRIVER.phase == M_DONE);
-	`MAIL.put(tr2);
-	
-	wait (`DRIVER.phase == M_DONE);
-	@(negedge testbench.SDA) time1 = $realtime();
-	@(negedge testbench.SCL) time2 = $realtime();
-	
-	EXPECTED_START_STOP = ((`DRIVER.phase == M_START) && (((time2 - time1) < 4us) && ((time2 - time1) > 4ns)));
-	-> assert_chk_startStopCondition;
-	
-	wait(testbench.SDA == 1'b0);
-	RESET_AFTER_START = ((`DRIVER.phase == M_START) && (testbench.SDA == 1'b0) && `TARGET.state == 0);
-	-> assert_chk_resetAfterStart;
-	
-	`DRIVER.BUFF_TIME = 0;
-	
-	wait (`DRIVER.phase == M_DONE);
-	`DRIVER.sendStart();
-	
-	#1000us;
+		tr2 = new(
+	        .addr(7'b0000111), 
+	        .rwSet(0), 
+	        .data_to_send({randdata.byte2})
+	    );
+		
+		`MAIL.put(tr1);
+		
+		wait (`DRIVER.phase == M_START);
+		
+		START_NO_ACK = ((`DRIVER.phase == M_START) && (`TARGET.SDA_tx != 1'b0));
+		-> assert_chk_startNoAck;
+		
+		wait (`DRIVER.phase == M_DONE);
+		`MAIL.put(tr2);
+		
+		wait (`DRIVER.phase == M_DONE);
+		@(negedge testbench.SDA) time1 = $realtime();
+		@(negedge testbench.SCL) time2 = $realtime();
+		
+		EXPECTED_START_STOP = ((`DRIVER.phase == M_START) && (((time2 - time1) < 4us) && ((time2 - time1) > 4ns)));
+		-> assert_chk_startStopCondition;
+		
+		wait(testbench.SDA == 1'b0);
+		RESET_AFTER_START = ((`DRIVER.phase == M_START) && (testbench.SDA == 1'b0) && `TARGET.state == 0);
+		-> assert_chk_resetAfterStart;
+		
+		`DRIVER.BUFF_TIME = 0;
+		
+		wait (`DRIVER.phase == M_DONE);
+		`DRIVER.sendStart();
+		wait (`DRIVER.phase == M_DONE);
+		#1000us;
+	end
 	$finish();
 end
 
