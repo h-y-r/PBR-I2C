@@ -5,6 +5,10 @@
 `define TRANS testbench.test_tr
 
 import transaction_class::*;
+class data;
+	rand logic [7:0] byte1;
+	rand logic [7:0] byte2;
+endclass
 
 module tst_writeTransaction;
 
@@ -22,6 +26,8 @@ event assert_chk_clockStretch;
 realtime stretch_time1;
 realtime stretch_time2;
 
+parameter int NUM_TRANSACTIONS = 20;
+
 property ACK_AFTER_DATA;
 	@(posedge testbench.SCL)
 	(`DRIVER.phase == M_DATA_TX && (`DRIVER.bit_idx == 0))
@@ -31,6 +37,7 @@ endproperty
 
 initial begin
 	Transaction tr;
+	data random_bytes;
 
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -45,34 +52,39 @@ initial begin
 	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
 	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
-	tr = new(
-        .addr(7'b0000111), 
-        .rwSet(0), 
-        .data_to_send({8'b10101010, 8'b11100011})
-    );
-	
-	`MAIL.put(tr);
+	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
+		if (!random_bytes.randomize()) begin
+			$error("blad - randomizacja danych");
+		end
+		tr = new(
+	        .addr(7'b0000111), 
+	        .rwSet(0), 
+	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
+	    );
+		
+		`MAIL.put(tr);
 
-	wait (`DRIVER.phase == M_ACK_ADDR);
-	RW_BIT = (!`TARGET.rw);
-	-> assert_chk_RWBitWrite;
-	wait (`DRIVER.phase == M_DATA_TX);
-	ACK_AFTER_ADDR = `DRIVER.last_ack;
-	-> assert_chk_addressExists;
+		wait (`DRIVER.phase == M_ACK_ADDR);
+		RW_BIT = (!`TARGET.rw);
+		-> assert_chk_RWBitWrite;
+		wait (`DRIVER.phase == M_DATA_TX);
+		ACK_AFTER_ADDR = `DRIVER.last_ack;
+		-> assert_chk_addressExists;
 
-    wait (`TARGET.state == 5);
-	stretch_time1 = $realtime();
-	@(posedge testbench.SCL) stretch_time2 = $realtime();
-	CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
-	$display("%0t",stretch_time2-stretch_time1);
-	-> assert_chk_clockStretch;
-	
-	wait (`DRIVER.phase == M_ACK_DATA);
-	wait (`DRIVER.phase == M_DATA_TX);
-	ACK_AFTER_BYTE = `DRIVER.last_ack;
-	-> assert_chk_ackAfterByte;
-
-	#25us;
+	    wait (`TARGET.state == 5);
+		stretch_time1 = $realtime();
+		@(posedge testbench.SCL) stretch_time2 = $realtime();
+		CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
+		$display("%0t",stretch_time2-stretch_time1);
+		-> assert_chk_clockStretch;
+		
+		wait (`DRIVER.phase == M_ACK_DATA);
+		wait (`DRIVER.phase == M_DATA_TX);
+		ACK_AFTER_BYTE = `DRIVER.last_ack;
+		-> assert_chk_ackAfterByte;
+		wait (`DRIVER.phase == M_DONE);
+		#100us;
+	end
 	$finish();
 end
 

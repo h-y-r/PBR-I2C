@@ -12,6 +12,8 @@ bit FREE_BUS;
 event assert_chk_freeBusIsHigh;
 event assert_chk_targetDoesNotGenerateStart;
 
+parameter int NUM_TRANSACTIONS = 20;
+
 initial begin
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -26,16 +28,26 @@ initial begin
 	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
 	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
-	FREE_BUS = testbench.SDA && testbench.SCL;
-	-> assert_chk_freeBusIsHigh;
-	
-	#200us;
-	-> assert_chk_targetDoesNotGenerateStart;
-	#10;
+
+	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
+		FREE_BUS = 1;
+		TARGET_START = 1;
+		#100ns;
+		-> assert_chk_freeBusIsHigh;
+		-> assert_chk_targetDoesNotGenerateStart;
+	end
+
 	$finish();
 end
 
-always @(negedge testbench.SDA) TARGET_START = 0;
+always @(negedge testbench.SDA) begin 
+	TARGET_START = 0;
+	FREE_BUS = 0;
+end
+
+always @(negedge testbench.SCL) begin 
+	FREE_BUS = 0;
+end
 
 always @(assert_chk_freeBusIsHigh) begin
 	chk_freeBusIsHigh : assert(FREE_BUS) $display("chk_freeBusIsHigh PASSED");
