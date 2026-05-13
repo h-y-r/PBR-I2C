@@ -9,7 +9,6 @@ import transaction_class::*;
 
 module tst_readTransaction;
 
-// Deklaracje zmiennych
 bit DATA_STABLE = 1;
 bit NO_STOP = 1;
 bit RW_BIT;
@@ -23,87 +22,103 @@ event assert_chk_dataStableWhenSCLHigh;
 event assert_chk_RWBitRead;
 event assert_chk_targetDoesNotGenerateStop;
 
+parameter int NUM_TRANSACTIONS = 20;
 
-property DATA_TRANSFER_FROM_MSB; //tez sprawdza czy 8 bitów
-	logic [7:0] sampleBits;
-	@(posedge testbench.SCL)
-	(`DRIVER.phase == M_DATA_RX) && (`DRIVER.bit_idx == 7)
-	##0 (1, sampleBits[7] = testbench.SDA)
-	##1 (1, sampleBits[6] = testbench.SDA)
-	##1 (1, sampleBits[5] = testbench.SDA)
-	##1 (1, sampleBits[4] = testbench.SDA)
-	##1 (1, sampleBits[3] = testbench.SDA)
-	##1 (1, sampleBits[2] = testbench.SDA)
-	##1 (1, sampleBits[1] = testbench.SDA)
-	##1 (1, sampleBits[0] = testbench.SDA)
-	|-> (sampleBits == `TARGET_BITS[15:8]);
+property DATA_TRANSFER_FROM_MSB;
+    logic [7:0] sampleBits;
+    @(posedge testbench.SCL)
+    (`DRIVER.phase == M_DATA_RX) && (`DRIVER.bit_idx == 7)
+    ##0 (1, sampleBits[7] = testbench.SDA)
+    ##1 (1, sampleBits[6] = testbench.SDA)
+    ##1 (1, sampleBits[5] = testbench.SDA)
+    ##1 (1, sampleBits[4] = testbench.SDA)
+    ##1 (1, sampleBits[3] = testbench.SDA)
+    ##1 (1, sampleBits[2] = testbench.SDA)
+    ##1 (1, sampleBits[1] = testbench.SDA)
+    ##1 (1, sampleBits[0] = testbench.SDA)
+    |-> (sampleBits == `TARGET_BITS[15:8]);
 endproperty
 
 initial begin
-	Transaction tr;
+    Transaction tr;
 
-	`RAND = new();
-	if (!`RAND.randomize()) begin
-	$error("blad");
-	end
+    `RAND = new();
+    #100ns;
 
-	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
-	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
-	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
-	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
-	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
-	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
-	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
-	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
-	#100ns;
-	
-	tr = new(
-        .addr(7'b0000111), 
-        .rwSet(1), 
-        .r_len(2)
-    );
-	
-	`MAIL.put(tr);
-	start_assert = 1;
-	
-	wait (`DRIVER.phase == M_ACK_ADDR);
-	RW_BIT = (`TARGET.rw);
-	-> assert_chk_RWBitRead;
-	wait (`DRIVER.phase == M_DONE);
-	-> assert_chk_dataStableWhenSCLHigh;
-	-> assert_chk_targetDoesNotGenerateStop;
-	#10;
-	$finish();
+    for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
+
+        `DRIVER.HIGH_PERIOD_SCL   = `RAND.high_period;
+        `DRIVER.LOW_PERIOD_SCL    = `RAND.low_period;
+        `DRIVER.DATA_SETUP_TIME   = `RAND.setup_time;
+        `DRIVER.RAND_STOP_BIT     = `RAND.rand_bit;
+        `DRIVER.START_SETUP_TIME  = `RAND.start_setup_time;
+        `DRIVER.START_HOLD_TIME   = `RAND.start_hold_time;
+        `DRIVER.STOP_SETUP_TIME   = `RAND.stop_setup_time;
+        `DRIVER.DATA_HOLD_TIME    = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+
+        DATA_STABLE  = 1;
+        NO_STOP      = 1;
+        start_assert = 0;
+
+        tr = new(
+            .addr(7'b0000111),
+            .rwSet(1),
+            .r_len(2)
+        );
+
+        `MAIL.put(tr);
+        start_assert = 1;
+
+        wait (`DRIVER.phase == M_ACK_ADDR);
+        RW_BIT = (`TARGET.rw);
+        -> assert_chk_RWBitRead;
+
+        wait (`DRIVER.phase == M_DONE);
+        -> assert_chk_dataStableWhenSCLHigh;
+        -> assert_chk_targetDoesNotGenerateStop;
+
+
+        #100ns;
+    end
+
+    #10;
+    $finish();
 end
 
 always @(posedge testbench.clk) begin
-	if(testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && `DRIVER.phase != M_START && start_assert) begin
-		DATA_UNSTABLE_time = $realtime();
-		DATA_STABLE = 0;
-	end
-	if(testbench.SCL == 1 && prev_sda == 0 && testbench.SDA != prev_sda && `DRIVER.phase != M_STOP && NO_STOP && start_assert) begin
-		STOP_time = $realtime();
-		NO_STOP = 0;
-	end 
-	prev_sda = testbench.SDA;
+    if (testbench.SCL == 1 && DATA_STABLE && testbench.SDA != prev_sda
+        && `DRIVER.phase != M_STOP && `DRIVER.phase != M_START && start_assert) begin
+        DATA_UNSTABLE_time = $realtime();
+        DATA_STABLE = 0;
+    end
+    if (testbench.SCL == 1 && prev_sda == 0 && testbench.SDA != prev_sda
+        && `DRIVER.phase != M_STOP && NO_STOP && start_assert) begin
+        STOP_time = $realtime();
+        NO_STOP = 0;
+    end
+    prev_sda = testbench.SDA;
 end
 
 always @(assert_chk_dataStableWhenSCLHigh) begin
-	chk_dataStableWhenSCLHigh : assert(DATA_STABLE) $display("chk_dataStableWhenSCLHigh PASSED");
-								else $error("chk_dataStableWhenSCLHigh FAILED at time %0t", DATA_UNSTABLE_time);
+    chk_dataStableWhenSCLHigh : assert(DATA_STABLE)
+        $display("chk_dataStableWhenSCLHigh PASSED");
+        else $error("chk_dataStableWhenSCLHigh FAILED at time %0t", DATA_UNSTABLE_time);
 end
 
 always @(assert_chk_targetDoesNotGenerateStop) begin
-	chk_targetDoesNotGenerateStop : assert(NO_STOP) $display("chk_targetDoesNotGenerateStop PASSED");
-									else $error("chk_targetDoesNotGenerateStop FAILED at time %0t", STOP_time);
+    chk_targetDoesNotGenerateStop : assert(NO_STOP)
+        $display("chk_targetDoesNotGenerateStop PASSED");
+        else $error("chk_targetDoesNotGenerateStop FAILED at time %0t", STOP_time);
 end
 
 always @(assert_chk_RWBitRead) begin
-	chk_RWBitRead : assert(RW_BIT) $display("chk_RWBitRead PASSED");
-					else $error("chk_RWBitRead FAILED");
+    chk_RWBitRead : assert(RW_BIT)
+        $display("chk_RWBitRead PASSED");
+        else $error("chk_RWBitRead FAILED");
 end
 
-chk_dataFromMSB: assert property (DATA_TRANSFER_FROM_MSB) $display("dataFromMSB PASSED!");
-				 else $error("dataFromMSB FAILED!");
+chk_dataFromMSB: assert property (DATA_TRANSFER_FROM_MSB)
+    $display("dataFromMSB PASSED!");
+    else $error("dataFromMSB FAILED!");
 
 endmodule
