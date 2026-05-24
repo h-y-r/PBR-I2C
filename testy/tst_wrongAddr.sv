@@ -25,7 +25,9 @@ endproperty
 initial begin
 	Transaction tr_addr;
 	rand_addr address = new();
-
+	logic[6:0] correct_address;
+	correct_address = 7'b0000111;
+	logic[6:0] wrong_address;
 	`RAND = new();
 	if (!`RAND.randomize()) begin
 	$error("blad");
@@ -62,7 +64,23 @@ initial begin
 		
 		#2000us;
 	end
-	$finish();
+
+	//testy - adres o różnicy jednego bitu
+
+	for (int i = 0; i<=6; i++) begin
+		wrong_address = correct_address;
+		wrong_address[i] = ~wrong_address[i];
+		#100ns;
+		tr_addr = new(
+	        .addr(wrong_address), 
+	        .rwSet(0), 
+	        .data_to_send({8'b00000001})
+	    );
+
+		`MAIL.put(tr_addr);
+		
+		#2000us;
+	end
 end
 
 chk_nackAfterWrongAddr: assert property (NACK_AFTER_WRONG_ADDR) $display("chk_nackAfterWrongAddr PASSED!");
