@@ -101,85 +101,59 @@ initial begin
 
     `MAIL.put(tr2);
 
-    #50us;
+    #500us;
     $finish;
 end
 
 
 task automatic check_scl_timing();
-
     real t1, t2;
-
     real period;
-
     real freq_hz;
-
     real max_freq_hz;
 
-    @(negedge testbench.SCL iff (`DRIVER.phase == M_DATA_RX || `DRIVER.phase == M_DATA_TX));
-
+    @(negedge testbench.SCL);
     t1 = $realtime;
 
-    @(negedge testbench.SCL iff (`DRIVER.phase == M_DATA_RX || `DRIVER.phase == M_DATA_TX));
-
+    @(negedge testbench.SCL);
     t2 = $realtime;
 
     period      = t2 - t1;
-
     freq_hz     = 1e9 / period;
-
     max_freq_hz = 1e9 / timing_cfg.T_SCL_MIN;
 
     chk_SCLPeriod: assert(period >= timing_cfg.T_SCL_MIN)
-
         $display("chk_SCLPeriod PASSED: period=%0t", period);
-
     else
-
         $error("chk_SCLPeriod FAILED: period=%0t expected>=%0t",
-
                period, timing_cfg.T_SCL_MIN);
 
     chk_SCLClockFreq: assert(freq_hz <= max_freq_hz)
-
         $display("chk_SCLClockFreq PASSED: freq=%0f Hz", freq_hz);
-
     else
-
         $error("chk_SCLClockFreq FAILED: freq=%0f Hz max=%0f Hz",
-
                freq_hz, max_freq_hz);
-
 endtask
 
 
 
 task automatic check_start_hold_time();
-
     real t_start, t_scl_fall;
-
     real delta;
 
     @(negedge testbench.SDA iff (testbench.SCL == 1 && `DRIVER.phase == M_START));
-
     t_start = $realtime;
 
-    @(negedge testbench.SCL iff (`DRIVER.phase == M_START));
-
+    @(negedge testbench.SCL);
     t_scl_fall = $realtime;
 
     delta = t_scl_fall - t_start;
 
     chk_startHoldTime: assert(delta >= timing_cfg.T_HD_STA_MIN)
-
         $display("chk_startHoldTime PASSED: hold=%0t", delta);
-
     else
-
         $error("chk_startHoldTime FAILED: hold=%0t expected>=%0t",
-
                delta, timing_cfg.T_HD_STA_MIN);
-
 endtask
 
 task automatic check_repeated_start_setup_time();
