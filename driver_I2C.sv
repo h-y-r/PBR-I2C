@@ -9,6 +9,7 @@ import transaction_class::*;
    rand realtime start_hold_time;
    rand realtime stop_setup_time;
    rand realtime rand_bit;
+   rand realtime stop_wait_time_err;
 
    constraint i2c_time_const {
      //Min High: 4000ns, Min Low: 4700ns, Min Setup Time: 250ns 
@@ -19,6 +20,7 @@ import transaction_class::*;
      start_hold_time  inside {[4000:7000]};
      stop_setup_time  inside {[4000:7000]};
      rand_bit    inside {[0:7]};
+     stop_wait_time_err inside {[10000:30000]}
    }
  endclass
 
@@ -34,6 +36,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   realtime START_HOLD_TIME = 4000; //min - 4000ns
   realtime STOP_SETUP_TIME = 4000; //min - 4000ns
   realtime BUFF_TIME = 4700; //min - 4700ns - time buffer pomiedzy stop i start
+  realtime STOP_WAIT_TIME_ERR = 10000; //czas do błędu z zatzymaniem stopu
   localparam MAX_BYTES = 32; //max liczba bajtow do burst write
 
   logic SDA_ctrl = 1;
@@ -320,6 +323,43 @@ task getACK(input bit is_addr_ack = 1'b0);
       sendStop();
     end
   endtask
+
+  task repeatedStartNoStopErr(input bit [6:0] addr, input bit [7:0] data); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        sendData(data);
+
+        // (opcjonalnie) jeśli sprwadzamy ACK po danych
+        // dodane
+        getACK(1'b0);
+        // koniec dodanego
+      end
+
+      sendRepeatedStart();
+
+      if(ack_got) begin
+        sendData(data);
+
+        // (opcjonalnie) jeśli sprwadzamy ACK po danych
+        // dodane
+        getACK(1'b0);
+        // koniec dodanego
+      end
+    end
+  endtask
   
   task readTransaction(input bit [6:0] addr); 
     begin
@@ -329,6 +369,99 @@ task getACK(input bit is_addr_ack = 1'b0);
       bit_idx  = BIT_ACK;
       // koniec dodanego
 
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        readData();
+      end
+
+      // NACK po ostatnim bajcie read (master->target)
+      // dodane
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
+      sendBit(1'b1);
+      sendStop();
+    end
+  endtask
+
+  task readDoubleStartErr(input bit [6:0] addr); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        readData();
+      end
+
+      // NACK po ostatnim bajcie read (master->target)
+      // dodane
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
+      sendBit(1'b1);
+      sendStop();
+    end
+  endtask
+
+  task stopHoldErr(input bit [6:0] addr); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        readData();
+      end
+
+      // NACK po ostatnim bajcie read (master->target)
+      // dodane
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
+      sendBit(1'b1);
+      #STOP_WAIT_TIME_ERR;
+      sendStop();
+    end
+  endtask
+
+  task stopStartReadErr(input bit [6:0] addr); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStop();
       sendStart();
       sendAddressRW(addr, 1'b1);
 
@@ -453,6 +586,97 @@ task getACK(input bit is_addr_ack = 1'b0);
         // (opcjonalnie) jeśli sprwadzamy ACK po danych
         // dodane
         // koniec dodanego
+      end          
+      sendStop();
+    end
+  endtask
+
+
+    task writeRandomStart(input bit [6:0] addr, input bit [7:0] data, int randbit); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+        // koniec dodanego
+      phase = M_DATA_TX;
+      if(ack_got) begin
+        for (i = 7; i >= 7-randbit; i--) begin
+          bit_idx  = i;
+          sendBit(data[i]);
+          
+        end
+        // (opcjonalnie) jeśli sprwadzamy ACK po danych
+        // dodane
+        // koniec dodanego
+      end          
+      sendStart();
+      sendStop();
+    end
+  endtask
+
+  task falseStart(input bit [6:0] addr, input bit [7:0] data, int randbit); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+        // koniec dodanego
+      phase = M_DATA_TX;
+      if(ack_got) begin
+        for (i = 7; i >= 0; i--) begin
+          bit_idx  = i;
+          if(i == randbit) begin
+            sendStart();
+          end else begin
+            sendBit(data[i]);
+          end
+          
+        end
+      end          
+      sendStop();
+    end
+  endtask
+
+    task falseStop(input bit [6:0] addr, input bit [7:0] data, int randbit); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+        // koniec dodanego
+      phase = M_DATA_TX;
+      if(ack_got) begin
+        for (i = 7; i >= 0; i--) begin
+          bit_idx  = i;
+          if(i == randbit) begin
+            sendStop();
+          end else begin
+            sendBit(data[i]);
+          end
+          
+        end
       end          
       sendStop();
     end
