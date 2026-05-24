@@ -55,7 +55,6 @@ initial begin
 
     fork
     begin
-        wait(`DRIVER.phase == M_START);
         repeat (2) check_start_hold_time();
     end
 
@@ -128,9 +127,7 @@ task automatic check_scl_timing();
         $error("chk_SCLClockFreq FAILED: freq=%0f Hz max=%0f Hz",
                freq_hz, max_freq_hz);
 endtask
-
 task automatic check_start_hold_time();
-
     real t_start, t_scl_fall;
     real delta;
 
@@ -139,17 +136,32 @@ task automatic check_start_hold_time();
 
     @(negedge testbench.SCL);
     t_scl_fall = $realtime;
+
     delta = t_scl_fall - t_start;
+
     chk_startHoldTime: assert(delta >= timing_cfg.T_HD_STA_MIN)
-
         $display("chk_startHoldTime PASSED: hold=%0t", delta);
-
     else
-
         $error("chk_startHoldTime FAILED: hold=%0t expected>=%0t",
-
                delta, timing_cfg.T_HD_STA_MIN);
+endtask
+task automatic check_start_hold_time();
+    real t_start, t_scl_fall;
+    real delta;
 
+    @(negedge testbench.SDA iff (testbench.SCL == 1));
+    t_start = $realtime;
+
+    @(negedge testbench.SCL);
+    t_scl_fall = $realtime;
+
+    delta = t_scl_fall - t_start;
+
+    chk_startHoldTime: assert(delta >= timing_cfg.T_HD_STA_MIN)
+        $display("chk_startHoldTime PASSED: hold=%0t", delta);
+    else
+        $error("chk_startHoldTime FAILED: hold=%0t expected>=%0t",
+               delta, timing_cfg.T_HD_STA_MIN);
 endtask
 
 task automatic check_repeated_start_setup_time();
