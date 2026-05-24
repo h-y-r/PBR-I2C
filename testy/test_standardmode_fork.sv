@@ -21,9 +21,6 @@ real t_last_sda_change;
 always @(testbench.SDA)
     t_last_sda_change = $realtime;
 
-always @(posedge testbench.SCL)
-    t_scl_rise = $realtime;
-
 initial begin
     Transaction tr;
     Transaction tr2;
