@@ -20,7 +20,7 @@ import transaction_class::*;
      start_hold_time  inside {[4000:7000]};
      stop_setup_time  inside {[4000:7000]};
      rand_bit    inside {[0:7]};
-     stop_wait_time_err inside {[10000:30000]}
+     stop_wait_time_err inside {[10000:30000]};
    }
  endclass
 

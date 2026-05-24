@@ -159,7 +159,7 @@ else
            timing_cfg.T_BUF_MIN);
 
 
------------------------------------------------------------
+
 
 property P_DATA_SETUP;
     @(posedge testbench.SCL)
