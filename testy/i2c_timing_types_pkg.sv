@@ -37,13 +37,17 @@ package i2c_timing_types_pkg;
 
   function automatic i2c_timing_cfg_t get_fast_mode_cfg();
     i2c_timing_cfg_t cfg;
-    cfg.T_SCL_MIN        = 0ns; 
-    cfg.T_HD_STA_MIN     = 0ns;
-    cfg.T_SU_STA_MIN     = 0ns;
-    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_SCL_MIN        = 2_500ns;
+
+    cfg.T_HD_STA_MIN     = 600ns;
+    cfg.T_SU_STA_MIN     = 600ns;
+
+    cfg.T_SU_DAT_MIN     = 100ns;
     cfg.T_HD_DAT_MIN     = 0ns;
-    cfg.T_SU_STO_MIN     = 0ns;
-    cfg.T_BUF_MIN        = 0ns;
+
+    cfg.T_SU_STO_MIN     = 600ns;
+    cfg.T_BUF_MIN        = 1_300ns;
+
     cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
@@ -52,13 +56,17 @@ package i2c_timing_types_pkg;
   function automatic i2c_timing_cfg_t get_fast_mode_plus_cfg();
     i2c_timing_cfg_t cfg;
 
-    cfg.T_SCL_MIN        = 0ns;
-    cfg.T_HD_STA_MIN     = 0ns;
-    cfg.T_SU_STA_MIN     = 0ns;
-    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_SCL_MIN        = 1_000ns;
+
+    cfg.T_HD_STA_MIN     = 260ns;
+    cfg.T_SU_STA_MIN     = 260ns;
+
+    cfg.T_SU_DAT_MIN     = 50ns;
     cfg.T_HD_DAT_MIN     = 0ns;
-    cfg.T_SU_STO_MIN     = 0ns;
-    cfg.T_BUF_MIN        = 0ns;
+
+    cfg.T_SU_STO_MIN     = 260ns;
+    cfg.T_BUF_MIN        = 500ns;
+
     cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
@@ -67,13 +75,17 @@ package i2c_timing_types_pkg;
   function automatic i2c_timing_cfg_t get_high_speed_cfg();
     i2c_timing_cfg_t cfg;
 
-    cfg.T_SCL_MIN        = 0ns;  
-    cfg.T_HD_STA_MIN     = 0ns;
-    cfg.T_SU_STA_MIN     = 0ns;
-    cfg.T_SU_DAT_MIN     = 0ns;
+    cfg.T_SCL_MIN        = 294_118ps;  
+
+    cfg.T_HD_STA_MIN     = 160ns;
+    cfg.T_SU_STA_MIN     = 160ns;
+
+    cfg.T_SU_DAT_MIN     = 10ns;
     cfg.T_HD_DAT_MIN     = 0ns;
-    cfg.T_SU_STO_MIN     = 0ns;
+
+    cfg.T_SU_STO_MIN     = 160ns;
     cfg.T_BUF_MIN        = 0ns;
+
     cfg.T_DATA_VALID_GUARD = 0ns;
 
     return cfg;
@@ -82,14 +94,18 @@ package i2c_timing_types_pkg;
   function automatic i2c_timing_cfg_t get_ultra_fast_cfg();
     i2c_timing_cfg_t cfg;
   
-    cfg.T_SCL_MIN        = 0ns; 
-    cfg.T_HD_STA_MIN     = 0ns;
-    cfg.T_SU_STA_MIN     = 0ns;
-    cfg.T_SU_DAT_MIN     = 0ns;
-    cfg.T_HD_DAT_MIN     = 0ns;
-    cfg.T_SU_STO_MIN     = 0ns;
-    cfg.T_BUF_MIN        = 0ns;
-    cfg.T_DATA_VALID_GUARD = 0ns;
+    cfg.T_SCL_MIN        = 200ns; 
+
+    cfg.T_HD_STA_MIN     = 50ns;
+    cfg.T_SU_STA_MIN     = 50ns;
+
+    cfg.T_SU_DAT_MIN     = 30ns;
+    cfg.T_HD_DAT_MIN     = 10ns;
+
+    cfg.T_SU_STO_MIN     = 50ns;
+    cfg.T_BUF_MIN        = 80ns;
+
+    cfg.T_DATA_VALID_GUARD = 10ns;
 
     return cfg;
   endfunction
