@@ -1,7 +1,7 @@
 `define DRIVER testbench.dv_i2c
 `define TARGET testbench.tg_i2c
 `define MAIL testbench.dv_i2c.tr_mailbox
-`define RAND testbench.dv_i2c.i2c_cfg
+`define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
 `define TARGET_BITS testbench.tg_i2c.data_send //ostatnie do zmieniania, latwiej bedzie dla roznych targetow z definicja
 
@@ -11,48 +11,50 @@ module test;
 
 property ADRESS_10BIT;
 	@(posedge testbench.SCL)
-	((`DRIVER.phase == M_ADDR_10BIT) && (`DRIVER.bit_idx == BIT_ACK)) |-> (testbench.SDA == 1'b0); // ACK po 1 bajcie adresu
+	((`DRIVER.phase == M_ADDR_10BIT) && (`DRIVER.bit_idx == 0)) 
+	|=> (testbench.SDA == 1'b0); // ACK po 1 bajcie adresu
 endproperty
 
 property WRITE_DATA_10BIT;
     @(posedge testbench.SCL)
-    ((`DRIVER.phase == M_ADDR_10BIT) && (`DRIVER.bit_idx == BIT_ACK) && (testbench.SDA == 1'b0)) // ACK po 1 bajcie adresu
-    ##[1:$]
-    (`DRIVER.phase == M_DATA_TX) |-> (`DRIVER.bit_idx >= 0); // robi write
+    ((`DRIVER.bit10 == WRITE_10BIT) && (`DRIVER.bit_idx == -2)) 
+    |-> 
+    (`DRIVER.phase == M_DATA_TX)// robi write
 endproperty
 
 property READ_DATA_10BIT;
     @(posedge testbench.SCL)
-    ((`DRIVER.phase == M_ADDR_10BIT) && (`DRIVER.bit_idx == BIT_ACK) && (testbench.SDA == 1'b0)) // ACK po 1 bajcie adresu
-    ##[1:$]
-    (`DRIVER.phase == M_DATA_RX) |-> (`DRIVER.bit_idx >= 0); // robi read
+    ((`DRIVER.bit10 == READ_10BIT) && (`DRIVER.bit_idx == -2)) 
+    |-> 
+    (`DRIVER.phase == M_DATA_RX)// robi read
 endproperty
 
+parameter int NUM_TRANSACTIONS = 20;
 
 initial begin
-	Transaction tr;
-
-	RAND = new();
-	if (!RAND.randomize()) begin
+	`RAND = new();
+	if (!`RAND.randomize()) begin
 	$error("blad");
 	end
 
-	`DRIVER.HIGH_PERIOD_SCL = RAND.high_period;
-	`DRIVER.LOW_PERIOD_SCL  = RAND.low_period;
-	`DRIVER.DATA_SETUP_TIME = RAND.setup_time;
-	`DRIVER.RAND_STOP_BIT = RAND.rand_bit;
-	`DRIVER.START_SETUP_TIME = RAND.start_setup_time;
-	`DRIVER.START_HOLD_TIME = RAND.start_hold_time;
-	`DRIVER.STOP_SETUP_TIME = RAND.stop_setup_time;
-	`DRIVER.DATA_HOLD_TIME = DRIVER.LOW_PERIOD_SCL - DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
+	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
+	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
+	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
+	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
+	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
+	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
-		
-	`DRIVER.writeTransaction10BIT(10'b0000000111, 8'b10101010);
-	#BUFF_TIME;
-	`DRIVER.readTransaction10BIT(10'b0000000111);
+
+	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin		
+		`DRIVER.writeTransaction10BIT(10'b0000000111, 8'b10101010);
+		#`DRIVER.BUFF_TIME;
+		`DRIVER.readTransaction10BIT(10'b0000000111);
+		#100us;
+	end
 	
-	`MAIL.put(tr);
-	#25us;
+	$finish();
 end
 	
 chk_adress10Bit: assert property (ADRESS_10BIT) $display ("chk_adress10Bit PASSED!");
@@ -63,3 +65,4 @@ chk_writeData10Bit: assert property (WRITE_DATA_10BIT) $display("chk_writeData10
 
 chk_readData10Bit: assert property (READ_DATA_10BIT) $display("chk_readData10Bit PASSED!");
 		else $error("chk_readData10Bit FAILED!");
+endmodule
