@@ -1,0 +1,206 @@
+`define DRIVER testbench.dv_i2c
+`define TARGET testbench.tg_i2c
+`define MAIL   testbench.dv_i2c.tr_mailbox
+`define RAND   testbench.i2c_cfg
+`define TRANS  testbench.test_tr
+
+import transaction_class::*;
+import i2c_timing_types_pkg::*;
+
+module test;
+
+timeunit 1ns;
+timeprecision 1ps;
+
+i2c_timing_cfg_t timing_cfg;
+
+realtime t_last_sda_change;
+realtime t_last_scl_fall;
+
+
+
+always @(testbench.SDA) begin
+    t_last_sda_change = $realtime;
+end
+
+always @(negedge testbench.SCL) begin
+    t_last_scl_fall = $realtime;
+end
+
+
+
+
+initial begin
+    Transaction tr;
+    Transaction tr2;
+
+    timing_cfg = get_cfg(MODE_STD);
+
+    `RAND = new();
+
+    if (!`RAND.randomize())
+        $error("Randomization failed");
+
+    `DRIVER.HIGH_PERIOD_SCL  = `RAND.high_period;
+    `DRIVER.LOW_PERIOD_SCL   = `RAND.low_period;
+    `DRIVER.DATA_SETUP_TIME  = `RAND.setup_time;
+    `DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+    `DRIVER.START_HOLD_TIME  = `RAND.start_hold_time;
+    `DRIVER.STOP_SETUP_TIME  = `RAND.stop_setup_time;
+    `DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+
+    #100ns;
+
+    tr = new(
+        .addr(7'b0000111),
+        .rwSet(0),
+        .data_to_send({8'b10101010, 8'b11100011})
+    );
+
+    tr2 = new(
+        .addr(7'b0000111),
+        .rwSet(0),
+        .data_to_send({8'b10101010, 8'b11100011})
+    );
+
+    `MAIL.put(tr);
+
+    #20us;
+
+    `MAIL.put(tr2);
+
+    #500us;
+    $finish;
+end
+
+
+
+
+property P_SCL_PERIOD;
+    realtime t1;
+
+    @(negedge testbench.SCL)
+    (1, t1 = $realtime)
+    |=> (($realtime - t1) >= timing_cfg.T_SCL_MIN);
+endproperty
+
+chk_SCLPeriod: assert property (P_SCL_PERIOD)
+    $display("chk_SCLPeriod PASSED");
+else
+    $error("TIMING VIOLATION: SCL period too short, expected >= %0t",
+           timing_cfg.T_SCL_MIN);
+
+
+property P_START_HOLD;
+    realtime t_start;
+
+    @(negedge testbench.SDA)
+    (testbench.SCL == 1 && `DRIVER.phase == M_START, t_start = $realtime)
+    |-> @(negedge testbench.SCL)
+        (($realtime - t_start) >= timing_cfg.T_HD_STA_MIN);
+endproperty
+
+chk_startHoldTime: assert property (P_START_HOLD)
+    $display("chk_startHoldTime PASSED");
+else
+    $error("TIMING VIOLATION: START hold time too short, expected >= %0t",
+           timing_cfg.T_HD_STA_MIN);
+
+
+property P_REPEATED_START_SETUP;
+    realtime t_scl_rise;
+
+    @(posedge testbench.SCL)
+    (`DRIVER.phase == M_START, t_scl_rise = $realtime)
+    |-> @(negedge testbench.SDA)
+        (testbench.SCL == 1 &&
+        (($realtime - t_scl_rise) >= timing_cfg.T_SU_STA_MIN));
+endproperty
+
+chk_repeatedStartSetupTime: assert property (P_REPEATED_START_SETUP)
+    $display("chk_repeatedStartSetupTime PASSED");
+else
+    $error("TIMING VIOLATION: repeated START setup time too short, expected >= %0t",
+           timing_cfg.T_SU_STA_MIN);
+
+
+property P_STOP_SETUP;
+    realtime t_scl_rise;
+
+    @(posedge testbench.SCL)
+    (`DRIVER.phase == M_STOP, t_scl_rise = $realtime)
+    |-> @(posedge testbench.SDA)
+        (testbench.SCL == 1 &&
+        (($realtime - t_scl_rise) >= timing_cfg.T_SU_STO_MIN));
+endproperty
+
+chk_stopSetUpTime: assert property (P_STOP_SETUP)
+    $display("chk_stopSetUpTime PASSED");
+else
+    $error("TIMING VIOLATION: STOP setup time too short, expected >= %0t",
+           timing_cfg.T_SU_STO_MIN);
+
+
+
+property P_STOP_START_FREE_TIME;
+    realtime t_stop;
+
+    @(posedge testbench.SDA)
+    (testbench.SCL == 1 && `DRIVER.phase == M_STOP, t_stop = $realtime)
+    |-> @(negedge testbench.SDA)
+        (testbench.SCL == 1 &&
+        (($realtime - t_stop) >= timing_cfg.T_BUF_MIN));
+endproperty
+
+chk_stopStartFreeTime: assert property (P_STOP_START_FREE_TIME)
+    $display("chk_stopStartFreeTime PASSED");
+else
+    $error("TIMING VIOLATION: bus free time STOP-to-START too short, expected >= %0t",
+           timing_cfg.T_BUF_MIN);
+
+
+-----------------------------------------------------------
+
+property P_DATA_SETUP;
+    @(posedge testbench.SCL)
+    (`DRIVER.phase == M_DATA_RX || `DRIVER.phase == M_DATA_TX)
+    |->
+    (($realtime - t_last_sda_change) >= timing_cfg.T_SU_DAT_MIN);
+endproperty
+
+chk_dataSetUpTime: assert property (P_DATA_SETUP)
+    $display("chk_dataSetUpTime PASSED");
+else
+    $error("TIMING VIOLATION: DATA setup time too short, expected >= %0t",
+           timing_cfg.T_SU_DAT_MIN);
+
+
+
+
+property P_DATA_HOLD;
+    @(testbench.SDA)
+    (`DRIVER.phase == M_DATA_RX || `DRIVER.phase == M_DATA_TX)
+    |->
+    (($realtime - t_last_scl_fall) >= timing_cfg.T_HD_DAT_MIN);
+endproperty
+
+chk_dataHoldTime: assert property (P_DATA_HOLD)
+    $display("chk_dataHoldTime PASSED");
+else
+    $error("TIMING VIOLATION: DATA hold time too short, expected >= %0t",
+           timing_cfg.T_HD_DAT_MIN);
+
+
+property P_DATA_STABLE_WHILE_SCL_HIGH;
+    @(testbench.SDA)
+    !((`DRIVER.phase == M_DATA_RX || `DRIVER.phase == M_DATA_TX) &&
+      testbench.SCL == 1);
+endproperty
+
+chk_dataValidTime: assert property (P_DATA_STABLE_WHILE_SCL_HIGH)
+    $display("chk_dataValidTime PASSED");
+else
+    $error("TIMING VIOLATION: SDA changed while SCL high during DATA phase");
+
+
+endmodule
