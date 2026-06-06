@@ -20,6 +20,11 @@ typedef enum int {
    rand realtime start_hold_time;
    rand realtime stop_setup_time;
    rand realtime rand_bit;
+
+   function new();
+        mode = MODE_STD;
+   endfunction
+
    constraint mode_supported_c {
         mode inside {MODE_STD, MODE_FAST, MODE_FAST_PLUS};
     }
