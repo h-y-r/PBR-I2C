@@ -33,9 +33,47 @@ end
 initial begin
     Transaction tr;
     Transaction tr2;
+    string mode_arg;
+    //timing_cfg = get_cfg(MODE_STD);
 
-    timing_cfg = get_cfg(MODE_STD);
+    //wywolanie xrun ... +I2C_MODE=STD,FAST,FAST_PLUS
 
+
+    if (!$value$plusargs("I2C_MODE=%s", mode_arg))
+
+        mode_arg = "STD";
+
+    case (mode_arg)
+
+        "STD": begin
+
+            timing_cfg = get_cfg(MODE_STD);
+
+            //`RAND.mode = MODE_STD;
+
+        end
+
+        "FAST": begin
+
+            timing_cfg = get_cfg(MODE_FAST);
+
+            //`RAND.mode = MODE_FAST;
+
+        end
+
+        "FAST_PLUS": begin
+
+            timing_cfg = get_cfg(MODE_FMP);
+
+            //`RAND.mode = MODE_FAST_PLUS;
+
+        end
+
+        default:
+
+            $fatal(1, "Unsupported I2C_MODE=%s", mode_arg);
+
+    endcase
     `RAND = new();
 
     if (!`RAND.randomize())
