@@ -37,7 +37,7 @@ initial begin
     //timing_cfg = get_cfg(MODE_STD);
 
     //wywolanie xrun ... +I2C_MODE=STD,FAST,FAST_PLUS
-
+    `RAND = new();
 
     if (!$value$plusargs("I2C_MODE=%s", mode_arg))
 
@@ -49,7 +49,7 @@ initial begin
 
             timing_cfg = get_cfg(MODE_STD);
 
-            //`RAND.mode = MODE_STD;
+            `RAND.mode = MODE_STD;
 
         end
 
@@ -57,7 +57,7 @@ initial begin
 
             timing_cfg = get_cfg(MODE_FAST);
 
-            //`RAND.mode = MODE_FAST;
+            `RAND.mode = MODE_FAST;
 
         end
 
@@ -65,7 +65,7 @@ initial begin
 
             timing_cfg = get_cfg(MODE_FMP);
 
-            //`RAND.mode = MODE_FAST_PLUS;
+            `RAND.mode = MODE_FAST_PLUS;
 
         end
 
@@ -74,7 +74,7 @@ initial begin
             $fatal(1, "Unsupported I2C_MODE=%s", mode_arg);
 
     endcase
-    `RAND = new();
+    //`RAND = new();
 
     if (!`RAND.randomize())
         $error("Randomization failed");
