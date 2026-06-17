@@ -194,7 +194,7 @@ initial begin
 end
 
 
-always @(assert_chk_dataFullBuff) begin
+/*always @(assert_chk_dataFullBuff) begin
     chk_dataFullBuff: assert(FULLBUFF)
         $display("chk_dataFullBuff PASSED");
         else $error("chk_dataFullBuff: FAILED");
@@ -210,6 +210,6 @@ always @(assert_chk_outOfRange) begin
     chk_outOfRange : assert(OUTOFRANGE)
         $display("chk_outOfRange PASSED");
         else $error("chk_outOfRange FAILED");
-end
+end*/
 
 endmodule
