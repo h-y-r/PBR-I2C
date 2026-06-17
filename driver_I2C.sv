@@ -695,19 +695,21 @@ task getACK(input bit is_addr_ack = 1'b0);
 	
 task sendAdress10Bit(input bit [9:0] addr);
 	static bit [4:0] code = 5'b11110;
-	phase = M_ADDR_10BIT;
 	byte_idx = -1;
 	sendStart();
+  phase = M_ADDR_10BIT;
 	
 	for (i = 4; i >= 0; i--) begin
-          bit_idx  = i;
+      bit_idx  = i+3;
 		  sendBit(code[i]);
 	end
 	
+  bit_idx  = 2;
 	sendBit(addr[9]);
+  bit_idx  = 1;
 	sendBit(addr[8]);
-	bit_idx = BIT_RW;
-	sendBit(1'b0);
+  bit_idx  = 0;
+  sendBit(1'b0);
 	
 	SDA_ctrl = 1;
     getACK(1'b1); 
@@ -715,7 +717,7 @@ task sendAdress10Bit(input bit [9:0] addr);
 	for (i = 7; i >= 0; i--) begin
         bit_idx = i;
         sendBit(addr[i]);
-    end
+  end
 
 	SDA_ctrl = 1;
     getACK(1'b1); 		
@@ -724,6 +726,19 @@ endtask
 task writeTransaction10BIT(input bit [9:0] addr, input bit [7:0] data);
 	sendAdress10Bit(addr);
 	
+	if(ack_got) begin
+	sendData(data);
+	// (opcjonalnie) jeśli sprwadzamy ACK po danych
+	getACK(1'b0);
+	end
+
+	sendStop();	
+endtask
+
+task writeTransaction10BIT(input bit [9:0] addr, input bit [7:0] data);
+	sendAdress10Bit(addr);
+	
+  bit10 = WRITE_10BIT;
 	if(ack_got) begin
 	sendData(data);
 	// (opcjonalnie) jeśli sprwadzamy ACK po danych
@@ -750,6 +765,7 @@ task readTransaction10BIT(input bit [9:0] addr);
 	SDA_ctrl = 1;
     getACK(1'b1); 
 	
+  bit10 = READ_10BIT;
 	if(ack_got) begin
 		readData();
 	end
@@ -945,6 +961,51 @@ task addrOnly(input bit [6:0] addr);
 
       sendBit(1'b1);
       sendStop();
+    end
+  endtask
+	
+  task burstReadError(input bit [6:0] addr, input int numBytes); 
+    begin
+      int k;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        for (k = numBytes; k > 0; k--) begin
+          // dodane
+          byte_idx = (numBytes - k);
+          // koniec dodanego
+
+          readData();
+          sendBit(1'b1);
+          if(k>1) begin
+            // ACK po bajcie read (master potwierdza że chce kolejny)
+            // dodane
+            phase   = M_ACK_DATA;
+            bit_idx = BIT_ACK;
+            // koniec dodanego
+
+            sendBit(1'b1);
+          end
+        end
+      end
+
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+
+      sendBit(1'b0);
+
+      for (int i = 0; i <= 10; i++) begin
+        genSCL();
+      end
+
     end
   endtask
 			
