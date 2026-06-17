@@ -136,6 +136,17 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       #HIGH_PERIOD_SCL;
     end
   endtask
+
+  task sendBitHoldErr (input bit data);
+    begin
+      SCL_ctrl = 0;
+      #DATA_HOLD_TIME SDA_ctrl = data;
+      #(DATA_SETUP_TIME) SCL_ctrl = 1;
+      wait(SCL === 1'b1); //SCL stretch
+      #STOP_WAIT_TIME_ERR;
+      #HIGH_PERIOD_SCL;
+    end
+  endtask
   
   task sendData (input bit [7:0] data);
     begin
@@ -873,6 +884,69 @@ task generalCalls(bit [1:0] callSelect);
 			
 	end
 endtask
+
+task addrOnly(input bit [6:0] addr); 
+    begin
+      // dodane
+      phase    = M_IDLE;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b0);
+
+      // dodane ack po adresie 
+      getACK(1'b1);
+      // koniec dodanego
+      sendStop();
+    end
+  endtask
+
+  task burstReadHoldErr(input bit [6:0] addr, input int numBytes); 
+    begin
+      // dodane
+      int k;
+      byte_idx = -1;
+      bit_idx  = BIT_ACK;
+      // koniec dodanego
+
+      sendStart();
+      sendAddressRW(addr, 1'b1);
+
+      // dodane
+      getACK(1'b1);
+      // koniec dodanego
+
+      if(ack_got) begin
+        for (k = numBytes; k > 0; k--) begin
+          // dodane
+          byte_idx = (numBytes - k);
+          // koniec dodanego
+
+          readData();
+          if(k>1) begin
+            // ACK po bajcie read (master potwierdza że chce kolejny)
+            // dodane
+            phase   = M_ACK_DATA;
+            bit_idx = BIT_ACK;
+            // koniec dodanego
+
+            sendBitHoldErr(1'b0);
+          end
+        end
+      end
+
+      // NACK po ostatnim bajcie
+      // dodane ACK slot (master wysyła NACK=1)
+      phase   = M_ACK_DATA;
+      bit_idx = BIT_ACK;
+      // koniec dodanego
+
+      sendBit(1'b1);
+      sendStop();
+    end
+  endtask
 			
 task transactionDriver();
   begin
