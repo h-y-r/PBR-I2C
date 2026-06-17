@@ -24,7 +24,7 @@ class data;
     rand logic [7:0] byte16;
 endclass
 
-module tst_writeTransaction;
+module tst_repeatedWriteSameAddr;
 int j = 0;
 int k = 0;
 // Deklaracje zmiennych

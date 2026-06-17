@@ -43,11 +43,11 @@ initial begin
 		if (!random_bytes.randomize()) begin
 			$error("blad - randomizacja danych");
 		end
-		testbench.reset = 1;
+		testbench.rst = 1;
 		#10;
-		testbench.reset = 0;
+		testbench.rst = 0;
 		#10;
-		testbench.reset = 1;
+		testbench.rst = 1;
 
 		tr = new(
 	        .addr(7'b0000111), 

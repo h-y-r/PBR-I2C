@@ -24,10 +24,12 @@ endproperty
 
 initial begin
 	Transaction tr_addr;
-	rand_addr address = new();
+	rand_addr address;
 	logic[6:0] correct_address;
-	correct_address = 7'b0000111;
 	logic[6:0] wrong_address;
+	address = new();
+	correct_address = 7'b0000111;
+	
 	`RAND = new();
 	if (!`RAND.randomize()) begin
 	$error("blad");
@@ -55,7 +57,7 @@ initial begin
 		end
 		#100ns;
 		tr_addr = new(
-	        .addr(address.randomaddr), 
+	        .addr(address.randaddr), 
 	        .rwSet(0), 
 	        .data_to_send({8'b00000001})
 	    );
@@ -81,6 +83,7 @@ initial begin
 		
 		#2000us;
 	end
+	$finish;
 
 end
 

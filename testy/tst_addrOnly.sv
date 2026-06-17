@@ -17,7 +17,6 @@ bit lastAck;
 
 initial begin
 	Transaction tr;
-	data random_bytes = new();
 
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -36,7 +35,7 @@ initial begin
 
 		`DRIVER.addrOnly(7'b0000111);
 
-		wait(`DRIVER.phase == M_IDLE);
+		wait(`DRIVER.phase == M_DONE);
 		lastAck = `DRIVER.last_ack;
 		->assert_chk_ackAddrOnly;
 	end

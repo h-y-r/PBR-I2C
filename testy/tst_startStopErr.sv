@@ -18,7 +18,7 @@ class rand_bit;
 endclass
 
 class rand_byte;
-    rand logic[7:0] byte;
+    rand logic[7:0] byte1;
 endclass
 
 bit RAND_STOP_WRITE_EN = 1'b0;
@@ -97,6 +97,8 @@ initial begin
     rand_byte data;
     Transaction tr;
     `RAND = new();
+    stopbit = new();
+    data = new();
     #100ns;
 
     if (!`RAND.randomize()) begin
@@ -117,8 +119,8 @@ initial begin
         if(!stopbit.randomize()) $error("chk_randStop - stop bit randomization failed");
         if(!data.randomize()) $error("chk_randStop - data randomization failed");
 
-        `DRIVER.writeRandomStop(7'b0000111, data.byte, stopbit.stopbit);
-        wait(`DRIVER.phase == M_IDLE);
+        `DRIVER.writeRandomStop(7'b0000111, data.byte1, stopbit.stopbit);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -127,7 +129,7 @@ initial begin
 
         RAND_STOP_WRITE_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         RAND_STOP_WRITE_EN = 1'b0;
 
     end
@@ -138,7 +140,7 @@ initial begin
 
         `DRIVER.readDoubleStartErr(7'b0000111);
 
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         
 
     end
@@ -149,8 +151,8 @@ initial begin
         if(!stopbit.randomize()) $error("chk_doubleStart - stop bit randomization failed");
         if(!data.randomize()) $error("chk_doubleStart - data randomization failed");
 
-        `DRIVER.writeRandomStart(7'b0000111, data.byte, stopbit.stopbit);
-        wait(`DRIVER.phase == M_IDLE);
+        `DRIVER.writeRandomStart(7'b0000111, data.byte1, stopbit.stopbit);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -159,7 +161,7 @@ initial begin
 
         RAND_STOP_WRITE_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         RAND_STOP_WRITE_EN = 1'b0;
 
     end
@@ -170,7 +172,7 @@ initial begin
 
         `DRIVER.stopStartReadErr(7'b0000111);
 
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         
 
     end
@@ -181,8 +183,8 @@ initial begin
         if(!stopbit.randomize()) $error("chk_falseStart - stop bit randomization failed");
         if(!data.randomize()) $error("chk_falseStart - data randomization failed");
 
-        `DRIVER.falseStart(7'b0000111, data.byte, stopbit.stopbit);
-        wait(`DRIVER.phase == M_IDLE);
+        `DRIVER.falseStart(7'b0000111, data.byte1, stopbit.stopbit);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -191,7 +193,7 @@ initial begin
 
         FALSE_START_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         FALSE_START_EN = 1'b0;
 
     end
@@ -200,8 +202,8 @@ initial begin
         if(!stopbit.randomize()) $error("chk_falseStop - stop bit randomization failed");
         if(!data.randomize()) $error("chk_falseStop - data randomization failed");
 
-        `DRIVER.falseStop(7'b0000111, data.byte, stopbit.stopbit);
-        wait(`DRIVER.phase == M_IDLE);
+        `DRIVER.falseStop(7'b0000111, data.byte1, stopbit.stopbit);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -210,7 +212,7 @@ initial begin
 
         FALSE_STOP_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         FALSE_STOP_EN = 1'b0;
 
     end
@@ -222,7 +224,7 @@ initial begin
         `DRIVER.STOP_WAIT_TIME_ERR = `RAND.stop_wait_time_err;
 
         `DRIVER.stopHoldErr(7'b0000111);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -231,7 +233,7 @@ initial begin
 
         HOLD_STOP_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         HOLD_STOP_EN = 1'b0;
 
     end
@@ -241,8 +243,8 @@ initial begin
         if(!data.randomize()) $error("chk_repeatedStartNoStop - data randomization failed");
 
 
-        `DRIVER.repeatedStartNoStopErr(7'b0000111, data.byte);
-        wait(`DRIVER.phase == M_IDLE);
+        `DRIVER.repeatedStartNoStopErr(7'b0000111, data.byte1);
+        wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0000111),
             .rwSet(1),
@@ -251,7 +253,7 @@ initial begin
 
         REPEATED_START_NO_STOP_EN = 1'b1;
         `MAIL.put(tr);
-        wait(`DRIVER.phase == M_IDLE);
+        wait(`DRIVER.phase == M_DONE);
         REPEATED_START_NO_STOP_EN = 1'b0;
 
     end

@@ -1,14 +1,14 @@
 `define DRIVER testbench.dv_i2c
 `define TARGET testbench.tg_i2c
 `define MAIL testbench.dv_i2c.tr_mailbox
-`define RAND testbench.dv_i2c.i2c_cfg
+`define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
 module tst_reservedAddr;
 
 bit DIFFERENT_BUS_FORMAT_ENABLE = 1'b0;
 bit RESERVED_ADDR_ENABLE = 1'b0;
 bit CBUS_ADDR_ENABLE = 1'b0;
-bit START_BYTE_ENABLE = 1'b0
+bit START_BYTE_ENABLE = 1'b0;
 
 // Deklaracje zmiennych
 property DIFFERENT_BUS_FORMAT;
@@ -42,20 +42,21 @@ endproperty
 
 initial begin
 	Transaction tr;
+	static logic [7:0] CBUSbyte = 8'b0;
 
-	RAND = new();
-	if (!RAND.randomize()) begin
+	`RAND = new();
+	if (!`RAND.randomize()) begin
 	$error("blad");
 	end
 
-	DRIVER.HIGH_PERIOD_SCL = RAND.high_period;
-	DRIVER.LOW_PERIOD_SCL  = RAND.low_period;
-	DRIVER.DATA_SETUP_TIME = RAND.setup_time;
-	DRIVER.RAND_STOP_BIT = RAND.rand_bit;
-	DRIVER.START_SETUP_TIME = RAND.start_setup_time;
-	DRIVER.START_HOLD_TIME = RAND.start_hold_time;
-	DRIVER.STOP_SETUP_TIME = RAND.stop_setup_time;
-	DRIVER.DATA_HOLD_TIME = DRIVER.LOW_PERIOD_SCL - DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.HIGH_PERIOD_SCL = `RAND.high_period;
+	`DRIVER.LOW_PERIOD_SCL  = `RAND.low_period;
+	`DRIVER.DATA_SETUP_TIME = `RAND.setup_time;
+	`DRIVER.RAND_STOP_BIT = `RAND.rand_bit;
+	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
+	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
+	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
 	//start byte - no device is allowed to ack
 	START_BYTE_ENABLE = 1'b1;
@@ -84,7 +85,7 @@ initial begin
     tr = new(
         .addr(7'b0000001),
         .rwSet(0),
-        .data_to_send(8'd0)
+        .data_to_send({CBUSbyte})
     );
 
     `MAIL.put(tr);
@@ -107,7 +108,7 @@ initial begin
     tr = new(
         .addr(7'b0000010),
         .rwSet(0),
-        .data_to_send(8'd0)
+        .data_to_send({8'd0})
     );
 
     `MAIL.put(tr);
@@ -128,7 +129,7 @@ initial begin
     tr = new(
         .addr(7'b0000011),
         .rwSet(0),
-        .data_to_send(8'd0)
+        .data_to_send({8'd0})
     );
     
     `MAIL.put(tr);

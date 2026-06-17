@@ -99,8 +99,8 @@ initial begin
 		`DRIVER.BUFF_TIME = 0;
 		
 		wait (`DRIVER.phase == M_DONE);
-		`DRIVER.sendStart();
-		wait (`DRIVER.phase == M_DONE);
+		//`DRIVER.sendStart();
+		//wait (`DRIVER.phase == M_DONE);
 		#1000us;
 	end
 	$finish();
