@@ -65,7 +65,7 @@ initial begin
 
             timing_cfg = get_cfg(MODE_FMP);
 
-            `RAND.mode = MODE_FAST_PLUS;
+            `RAND.mode = MODE_FMP;
 
         end
 
