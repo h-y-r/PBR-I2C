@@ -67,7 +67,8 @@ initial begin
     );
 	
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
 	START_BYTE_ENABLE = 1'b0;
 
 	//address reserved for cbus devices - expected nack
@@ -79,7 +80,8 @@ initial begin
     );
 	
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
 
 
     tr = new(
@@ -89,7 +91,8 @@ initial begin
     );
 
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
 
 	CBUS_ADDR_ENABLE = 1'b0;
 
@@ -102,7 +105,8 @@ initial begin
     );
 	
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
 
 
     tr = new(
@@ -112,7 +116,8 @@ initial begin
     );
 
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
     DIFFERENT_BUS_FORMAT_ENABLE = 1'b0;
 
     //address reserved for future purpouses - expected nack
@@ -124,7 +129,8 @@ initial begin
     );
     
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
 
     tr = new(
         .addr(7'b0000011),
@@ -133,7 +139,8 @@ initial begin
     );
     
     `MAIL.put(tr);
-    wait(`DRIVER.phase == M_IDLE);
+    wait(`DRIVER.phase == M_START);
+    wait(`DRIVER.phase == M_DONE);
     RESERVED_ADDR_ENABLE = 1'b0;
 
 

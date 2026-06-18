@@ -82,7 +82,7 @@ module target_I2C (scl, sda);
   //
   // Variable declaration
   //
-  wire debug = 1'b1;
+  wire debug = 1'b0;
 
   reg [7:0] mem [3:0]; // initiate memory
   reg [7:0] mem_adr;   // memory address
