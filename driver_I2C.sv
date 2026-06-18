@@ -413,6 +413,9 @@ task getACK(input bit is_addr_ack = 1'b0);
       // koniec dodanego
 
       sendStart();
+      SDA_ctrl =  1;
+      SCL_ctrl =  1;
+      #2;
       sendStart();
       sendAddressRW(addr, 1'b1);
 
@@ -475,6 +478,7 @@ task getACK(input bit is_addr_ack = 1'b0);
       // koniec dodanego
 
       sendStop();
+      #10;
       sendStart();
       sendAddressRW(addr, 1'b1);
 
@@ -589,7 +593,7 @@ task getACK(input bit is_addr_ack = 1'b0);
       // dodane ack po adresie 
       getACK(1'b1);
     	  // koniec dodanego
-	phase = M_DATA_TX;
+	     phase = M_DATA_TX;
       if(ack_got) begin
         for (i = 7; i >= 7-randbit; i--) begin
           bit_idx  = i;
