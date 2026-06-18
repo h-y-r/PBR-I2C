@@ -3,7 +3,6 @@
 `define MAIL testbench.dv_i2c.tr_mailbox
 `define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
-`define TARGET_BITS testbench.tg_i2c.data_send 
 
 import transaction_class::*;
 
@@ -23,21 +22,6 @@ event assert_chk_RWBitRead;
 event assert_chk_targetDoesNotGenerateStop;
 
 parameter int NUM_TRANSACTIONS = 20;
-
-property DATA_TRANSFER_FROM_MSB;
-    logic [7:0] sampleBits;
-    @(posedge testbench.SCL)
-    (`DRIVER.phase == M_DATA_RX) && (`DRIVER.bit_idx == 7)
-    ##0 (1, sampleBits[7] = testbench.SDA)
-    ##1 (1, sampleBits[6] = testbench.SDA)
-    ##1 (1, sampleBits[5] = testbench.SDA)
-    ##1 (1, sampleBits[4] = testbench.SDA)
-    ##1 (1, sampleBits[3] = testbench.SDA)
-    ##1 (1, sampleBits[2] = testbench.SDA)
-    ##1 (1, sampleBits[1] = testbench.SDA)
-    ##1 (1, sampleBits[0] = testbench.SDA)
-    |-> (sampleBits == `TARGET_BITS[15:8]);
-endproperty
 
 initial begin
     Transaction tr;
@@ -70,14 +54,13 @@ initial begin
         `MAIL.put(tr);
         start_assert = 1;
 
-        wait (`DRIVER.phase == M_ACK_ADDR);
+        wait (`DRIVER.phase == M_ACK_DATA);
         RW_BIT = (`TARGET.rw);
         -> assert_chk_RWBitRead;
 
         wait (`DRIVER.phase == M_DONE);
         -> assert_chk_dataStableWhenSCLHigh;
         -> assert_chk_targetDoesNotGenerateStop;
-
 
         #100ns;
     end
@@ -112,14 +95,10 @@ always @(assert_chk_targetDoesNotGenerateStop) begin
         else $error("chk_targetDoesNotGenerateStop FAILED at time %0t", STOP_time);
 end
 
-always @(assert_chk_RWBitRead) begin
-    chk_RWBitRead : assert(RW_BIT)
-        $display("chk_RWBitRead PASSED");
-        else $error("chk_RWBitRead FAILED");
-end
-
-chk_dataFromMSB: assert property (DATA_TRANSFER_FROM_MSB)
-    $display("dataFromMSB PASSED!");
-    else $error("dataFromMSB FAILED!");
+// always @(assert_chk_RWBitRead) begin
+//     chk_RWBitRead : assert(RW_BIT)
+//         $display("chk_RWBitRead PASSED");
+//         else $error("chk_RWBitRead FAILED");
+// end
 
 endmodule

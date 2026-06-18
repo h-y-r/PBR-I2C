@@ -32,11 +32,13 @@ bit OVERFLOW;
 bit FULLBUFF;
 bit OUTOFRANGE;
 bit MULTIPLEWRITE;
+bit DATA_FROM_MSB
 
 event assert_chk_sameAdress;
 event assert_chk_overflow;
 event assert_chk_dataFullBuff;
 event assert_chk_outOfRange;
+event assert_chk_dataFromMSB;
 
 parameter int NUM_TRANSACTIONS = 8;
 parameter int NUM_RUNS = 8;
@@ -140,6 +142,10 @@ initial begin
         OVERFLOW = (dataOut[15:12] == dataIn[3:0]);
         -> assert_chk_overflow;
         #1us;
+
+        DATA_FROM_MSB = (dataOut[7:0] == dataIn[7:0]);
+        -> assert_chk_dataFromMSB;
+        #1us;
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
 
         //TEST POWYZEJ BUFORA - powinien byc NACK, NIEISTNIEJACY ADRES I OUT OF RANGE
@@ -194,7 +200,7 @@ initial begin
 end
 
 
-/*always @(assert_chk_dataFullBuff) begin
+always @(assert_chk_dataFullBuff) begin
     chk_dataFullBuff: assert(FULLBUFF)
         $display("chk_dataFullBuff PASSED");
         else $error("chk_dataFullBuff: FAILED");
@@ -210,6 +216,12 @@ always @(assert_chk_outOfRange) begin
     chk_outOfRange : assert(OUTOFRANGE)
         $display("chk_outOfRange PASSED");
         else $error("chk_outOfRange FAILED");
-end*/
+end
+
+always @(assert_chk_dataFromMSB) begin
+    chk_outOfRange : assert(DATA_FROM_MSB)
+        $display("chk_dataFromMSB PASSED");
+        else $error("chk_dataFromMSB FAILED");
+end
 
 endmodule
