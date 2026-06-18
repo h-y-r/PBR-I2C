@@ -728,18 +728,6 @@ endtask
 task writeTransaction10BIT(input bit [9:0] addr, input bit [7:0] data);
 	sendAdress10Bit(addr);
 	
-	if(ack_got) begin
-	sendData(data);
-	// (opcjonalnie) jeśli sprwadzamy ACK po danych
-	getACK(1'b0);
-	end
-
-	sendStop();	
-endtask
-
-task writeTransaction10BIT(input bit [9:0] addr, input bit [7:0] data);
-	sendAdress10Bit(addr);
-	
   bit10 = WRITE_10BIT;
 	if(ack_got) begin
 	sendData(data);
