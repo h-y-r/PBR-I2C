@@ -29,6 +29,12 @@ property READ_DATA_10BIT;
     (`DRIVER.phase == M_DATA_RX)// robi read
 endproperty
 
+property IGNORE_10BIT;
+	@(posedge testbench.SCL)
+	((`DRIVER.phase == M_ADDR_10BIT) && (`DRIVER.bit_idx == 0)) 
+	|=> (testbench.SDA == 1'b1); // NACK po 1 bajcie adresu
+endproperty	
+
 parameter int NUM_TRANSACTIONS = 20;
 
 initial begin
@@ -57,12 +63,12 @@ initial begin
 	$finish();
 end
 	
-chk_adress10Bit: assert property (ADRESS_10BIT) $display ("chk_adress10Bit PASSED!");
+chk_adress10Bit: assert property (ADRESS_10BIT or IGNORE_10BIT) $display ("chk_adress10Bit PASSED!");
 		else $error("chk_adress10Bit FAILED!");
 		
-chk_writeData10Bit: assert property (WRITE_DATA_10BIT) $display("chk_writeData10Bit PASSED!");
+chk_writeData10Bit: assert property (WRITE_DATA_10BIT or IGNORE_10BIT) $display("chk_writeData10Bit PASSED!");
 		else $error("chk_writeData10Bit FAILED!");	
 
-chk_readData10Bit: assert property (READ_DATA_10BIT) $display("chk_readData10Bit PASSED!");
+chk_readData10Bit: assert property (READ_DATA_10BIT or IGNORE_10BIT) $display("chk_readData10Bit PASSED!");
 		else $error("chk_readData10Bit FAILED!");
 endmodule

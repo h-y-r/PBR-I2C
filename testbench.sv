@@ -14,13 +14,9 @@ module testbench;
   initial clk = 0;
   always #10 clk = ~clk;
   
-  target_stary tg_i2c(
-    .rst(rst),
-    .clk(clk),
-    .data_send(16'hDEAD), 
-    .SDA_bidir(SDA),      
-    .SCL_bidir(SCL),    
-    .data_received()
+  target_I2C tg_i2c(
+    .sda(SDA),      
+    .scl(SCL) 
   );
   
   driver_I2C dv_i2c(
