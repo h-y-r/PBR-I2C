@@ -37,4 +37,9 @@ package transaction_class;
     ILLEGAL,
     HARDWARE
   } call_phase;
+
+  typedef enum logic {
+    WRITE_10BIT,
+    READ_10BIT
+  } bit10_phase;
 endpackage
