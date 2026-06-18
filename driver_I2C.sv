@@ -52,6 +52,8 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
 
   call_phase selected_call = RESET;
 
+  bit10_phase bit10;
+	
   typedef mailbox #(Transaction) tr_mbx;
 
   tr_mbx tr_mailbox;
