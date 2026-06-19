@@ -14,6 +14,7 @@ parameter int NUM_TRANSACTIONS = 20;
 
 event assert_chk_holdNACK;
 bit lastAck;
+master_phase_e prev_phase;
 
 initial begin
 	Transaction tr;
@@ -33,26 +34,32 @@ initial begin
 	#100ns;
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
 
-		`DRIVER.burstReadHoldErr(7'b0000111, 2);
-
-		wait(`DRIVER.phase == M_DONE);
-
 		tr = new(
-            .addr(7'b0000111),
-            .rwSet(0),
+            .addr(7'b0010000), 
+            .rwSet(0), 
             .data_to_send({8'd0})
         );
-
         `MAIL.put(tr);
 
-        wait(`DRIVER.phase == M_DATA_RX);
+        wait (`DRIVER.phase == M_START);
 
-		lastAck = `DRIVER.last_ack;
-		->assert_chk_holdNACK;
+        wait (`DRIVER.phase == M_DONE);
 
-		wait(`DRIVER.phase == M_DONE);
+		`DRIVER.burstReadHoldErr(7'b0010000, 2);
+		wait (`DRIVER.phase == M_DONE);
 	end
 	$finish();
+end
+
+always@(posedge testbench.SCL) begin
+	prev_phase = `DRIVER.phase;
+end
+
+always@(`DRIVER.phase) begin
+	if(prev_phase == M_ACK_DATA && `DRIVER.phase == M_DATA_RX) begin
+		lastAck = `DRIVER.last_ack;
+		->assert_chk_holdNACK;
+	end
 end
 
 always @(assert_chk_holdNACK) begin

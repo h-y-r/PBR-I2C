@@ -128,6 +128,18 @@ initial begin
             .data_to_send({8'd0})
         );
 
+        
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
+
         RAND_STOP_WRITE_EN = 1'b1;
         `MAIL.put(tr);
         wait(`DRIVER.phase == M_START);
@@ -164,16 +176,27 @@ initial begin
             .data_to_send({8'd0})
         );
 
-        RAND_STOP_WRITE_EN = 1'b1;
+        
         `MAIL.put(tr);
         wait(`DRIVER.phase == M_START);
         wait(`DRIVER.phase == M_DONE);
-        RAND_STOP_WRITE_EN = 1'b0;
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
+
+        RAND_START_WRITE_EN = 1'b1;
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+        RAND_START_WRITE_EN = 1'b0;
 
     end
 
-    STOP_START_EN = 1'b1;
-
+    
     for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
         tr = new(
             .addr(7'b0010000),
@@ -183,9 +206,13 @@ initial begin
 
         `MAIL.put(tr);
 
+        wait(`DRIVER.phase == M_START);
         wait(`DRIVER.phase == M_DONE);
+        STOP_START_EN = 1'b1;
+
 
         `DRIVER.stopStartReadErr(7'b0010000);
+        STOP_START_EN = 1'b0;
 
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
@@ -193,7 +220,7 @@ initial begin
 
     end
 
-    STOP_START_EN = 1'b0;
+
 
     for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
         if(!stopbit.randomize()) $error("chk_falseStart - stop bit randomization failed");
@@ -207,6 +234,18 @@ initial begin
             .rwSet(0),
             .data_to_send({8'd0})
         );
+
+        
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
 
         FALSE_START_EN = 1'b1;
         `MAIL.put(tr);
@@ -228,6 +267,18 @@ initial begin
             .rwSet(0),
             .data_to_send({8'd0})
         );
+
+        
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
 
         FALSE_STOP_EN = 1'b1;
         `MAIL.put(tr);
@@ -252,6 +303,18 @@ initial begin
             .data_to_send({8'd0})
         );
 
+        
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
+
         HOLD_STOP_EN = 1'b1;
         `MAIL.put(tr);
         wait(`DRIVER.phase == M_START);
@@ -273,6 +336,18 @@ initial begin
             .rwSet(0),
             .data_to_send({8'd0})
         );
+
+        
+        `MAIL.put(tr);
+        wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_DONE);
+
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(1),
+            .r_len(1)
+        );
+
 
         REPEATED_START_NO_STOP_EN = 1'b1;
         `MAIL.put(tr);
