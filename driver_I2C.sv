@@ -413,9 +413,10 @@ task getACK(input bit is_addr_ack = 1'b0);
       // koniec dodanego
 
       sendStart();
-      SDA_ctrl =  1;
-      SCL_ctrl =  1;
-      #2;
+      #10;
+      SDA_ctrl =  1'b1;
+      SCL_ctrl =  1'b1;
+      #10;
       sendStart();
       sendAddressRW(addr, 1'b1);
 

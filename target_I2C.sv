@@ -121,6 +121,12 @@ module target_I2C (scl, sda);
   begin
      sda_o = 1'b1;
      state = idle;
+     foreach (mem[i]) begin
+       mem[i] = '0;
+     end
+        mem_adr = 0;
+        mem_do  = 0;
+        sr      = 0;
   end
 
   // generate shift register
@@ -149,7 +155,6 @@ module target_I2C (scl, sda);
   // acknowledge is missed
   // Fix by Michael Sosnoski
   assign #1 sda_dly = sda;
-
 
   //detect start condition
   always @(negedge sda)

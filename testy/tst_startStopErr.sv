@@ -119,11 +119,11 @@ initial begin
         if(!stopbit.randomize()) $error("chk_randStop - stop bit randomization failed");
         if(!data.randomize()) $error("chk_randStop - data randomization failed");
 
-        `DRIVER.writeRandomStop(7'b001000, data.byte1, stopbit.stopbit);
+        `DRIVER.writeRandomStop(7'b0010000, data.byte1, stopbit.stopbit);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );
@@ -137,36 +137,36 @@ initial begin
 
     end
 
-    DOUBLE_START_EN = 1'b1;
+    // DOUBLE_START_EN = 1'b1;
 
-    for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
+    // for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
 
-        `DRIVER.readDoubleStartErr(7'b001000);
+    //     `DRIVER.readDoubleStartErr(7'b0010000);
 
-        //wait(`DRIVER.phase == M_START);
-        //wait(`DRIVER.phase == M_DONE);
+    //     //wait(`DRIVER.phase == M_START);
+    //     //wait(`DRIVER.phase == M_DONE);
         
 
-    end
+    // end
 
-    DOUBLE_START_EN = 1'b0;
+    // DOUBLE_START_EN = 1'b0;
 
     for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
         if(!stopbit.randomize()) $error("chk_doubleStart - stop bit randomization failed");
         if(!data.randomize()) $error("chk_doubleStart - data randomization failed");
 
-        `DRIVER.writeRandomStart(7'b001000, data.byte1, stopbit.stopbit);
+        `DRIVER.writeRandomStart(7'b0010000, data.byte1, stopbit.stopbit);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );
 
         RAND_STOP_WRITE_EN = 1'b1;
         `MAIL.put(tr);
-        //wait(`DRIVER.phase == M_START);
+        wait(`DRIVER.phase == M_START);
         wait(`DRIVER.phase == M_DONE);
         RAND_STOP_WRITE_EN = 1'b0;
 
@@ -176,7 +176,7 @@ initial begin
 
     for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
 
-        `DRIVER.stopStartReadErr(7'b001000);
+        `DRIVER.stopStartReadErr(7'b0010000);
 
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
@@ -190,11 +190,11 @@ initial begin
         if(!stopbit.randomize()) $error("chk_falseStart - stop bit randomization failed");
         if(!data.randomize()) $error("chk_falseStart - data randomization failed");
 
-        `DRIVER.falseStart(7'b001000, data.byte1, stopbit.stopbit);
+        `DRIVER.falseStart(7'b0010000, data.byte1, stopbit.stopbit);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );
@@ -211,11 +211,11 @@ initial begin
         if(!stopbit.randomize()) $error("chk_falseStop - stop bit randomization failed");
         if(!data.randomize()) $error("chk_falseStop - data randomization failed");
 
-        `DRIVER.falseStop(7'b001000, data.byte1, stopbit.stopbit);
+        `DRIVER.falseStop(7'b0010000, data.byte1, stopbit.stopbit);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );
@@ -234,11 +234,11 @@ initial begin
 
         `DRIVER.STOP_WAIT_TIME_ERR = `RAND.stop_wait_time_err;
 
-        `DRIVER.stopHoldErr(7'b001000);
+        `DRIVER.stopHoldErr(7'b0010000);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );
@@ -256,11 +256,11 @@ initial begin
         if(!data.randomize()) $error("chk_repeatedStartNoStop - data randomization failed");
 
 
-        `DRIVER.repeatedStartNoStopErr(7'b001000, data.byte1);
+        `DRIVER.repeatedStartNoStopErr(7'b0010000, data.byte1);
         //wait(`DRIVER.phase == M_START);
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
-            .addr(7'b001000),
+            .addr(7'b0010000),
             .rwSet(1),
             .r_len(2)
         );

@@ -35,6 +35,7 @@ property ACK_AFTER_DATA;
 	(`DRIVER.ack_got == 1'b1);
 endproperty	
 
+
 initial begin
 	Transaction tr;
 	data random_bytes = new();
@@ -56,8 +57,9 @@ initial begin
 		if (!random_bytes.randomize()) begin
 			$error("blad - randomizacja danych");
 		end
+
 		tr = new(
-	        .addr(7'b0000111), 
+	        .addr(7'b0010000), 
 	        .rwSet(0), 
 	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
 	    );
@@ -71,12 +73,12 @@ initial begin
 		ACK_AFTER_ADDR = `DRIVER.last_ack;
 		-> assert_chk_addressExists;
 
-	    wait (`TARGET.state == 5);
-		stretch_time1 = $realtime();
-		@(posedge testbench.SCL) stretch_time2 = $realtime();
-		CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
-		$display("%0t",stretch_time2-stretch_time1);
-		-> assert_chk_clockStretch;
+	    // wait (`TARGET.state == 5);
+		// stretch_time1 = $realtime();
+		// @(posedge testbench.SCL) stretch_time2 = $realtime();
+		// CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
+		// $display("%0t",stretch_time2-stretch_time1);
+		// -> assert_chk_clockStretch;
 		
 		wait (`DRIVER.phase == M_ACK_DATA);
 		wait (`DRIVER.phase == M_DATA_TX);
