@@ -39,8 +39,8 @@ initial begin
 
 		tr = new(
             .addr(7'b0000111),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         `MAIL.put(tr);

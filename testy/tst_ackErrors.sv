@@ -56,6 +56,15 @@ initial begin
     `DRIVER.STOP_SETUP_TIME   = `RAND.stop_setup_time;
     `DRIVER.DATA_HOLD_TIME    = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
 
+    tr = new(
+        .addr(7'b0010000), 
+        .rwSet(0), 
+        .data_to_send({8'd0})
+    );
+    `MAIL.put(tr);
+
+    wait (`DRIVER.phase == M_DONE);
+
     `DRIVER.burstReadError(7'b0000111, 2);
 
     wait (`DRIVER.phase == M_ACK_DATA);

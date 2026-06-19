@@ -7,7 +7,7 @@
 
 import transaction_class::*;
 
-module tst_readTransaction;
+module tst_stopStartErr;
 
 class rand_bit;
     rand int stopbit;
@@ -124,8 +124,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         RAND_STOP_WRITE_EN = 1'b1;
@@ -160,8 +160,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         RAND_STOP_WRITE_EN = 1'b1;
@@ -175,6 +175,15 @@ initial begin
     STOP_START_EN = 1'b1;
 
     for(int i = 1; i<=NUM_TRANSACTIONS; i++)begin
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(0),
+            .data_to_send({8'd0})
+        );
+
+        `MAIL.put(tr);
+
+        wait(`DRIVER.phase == M_DONE);
 
         `DRIVER.stopStartReadErr(7'b0010000);
 
@@ -195,8 +204,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         FALSE_START_EN = 1'b1;
@@ -216,8 +225,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         FALSE_STOP_EN = 1'b1;
@@ -239,8 +248,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         HOLD_STOP_EN = 1'b1;
@@ -261,8 +270,8 @@ initial begin
         //wait(`DRIVER.phase == M_DONE);
         tr = new(
             .addr(7'b0010000),
-            .rwSet(1),
-            .r_len(2)
+            .rwSet(0),
+            .data_to_send({8'd0})
         );
 
         REPEATED_START_NO_STOP_EN = 1'b1;

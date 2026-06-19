@@ -31,7 +31,7 @@ initial begin
 	tr_addr = new(
         .addr(7'b0010000), 
         .rwSet(0), 
-        .data_to_send({8'b00000001}) //zmienic jak bedzie target z pamiecia
+        .data_to_send({8'd0})
     );
 
     tr_read = new(
