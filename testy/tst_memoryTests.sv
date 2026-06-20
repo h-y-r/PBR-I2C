@@ -32,7 +32,7 @@ bit OVERFLOW;
 bit FULLBUFF;
 bit OUTOFRANGE;
 bit MULTIPLEWRITE;
-bit DATA_FROM_MSB
+bit DATA_FROM_MSB;
 
 event assert_chk_sameAdress;
 event assert_chk_overflow;
@@ -58,7 +58,9 @@ initial begin
     Transaction tr;
     Transaction tr2;
     Transaction tr3;
-    data random_bytes = new();
+    data random_bytes;
+
+    random_bytes = new();
 
     `RAND = new();
     if (!`RAND.randomize()) begin
@@ -219,7 +221,7 @@ always @(assert_chk_outOfRange) begin
 end
 
 always @(assert_chk_dataFromMSB) begin
-    chk_outOfRange : assert(DATA_FROM_MSB)
+    chk_dataFromMSB : assert(DATA_FROM_MSB)
         $display("chk_dataFromMSB PASSED");
         else $error("chk_dataFromMSB FAILED");
 end
