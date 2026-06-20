@@ -242,7 +242,8 @@ task getACK(input bit is_addr_ack = 1'b0);
   task readBit(output bit data);
     begin
        SCL_ctrl = 0;
-       #LOW_PERIOD_SCL SCL_ctrl = 1;
+       #DATA_HOLD_TIME SDA_ctrl = 1;
+       #(LOW_PERIOD_SCL - DATA_HOLD_TIME) SCL_ctrl = 1;
        #1 data = SDA;
 	   #(HIGH_PERIOD_SCL - 1); 	
     end
