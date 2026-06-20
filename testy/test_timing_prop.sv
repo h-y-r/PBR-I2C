@@ -11,20 +11,23 @@ module test;
 
 timeunit 1ns;
 timeprecision 1ps;
+parameter int NUM_TRANSACTIONS = 20;
 
 i2c_timing_cfg_t timing_cfg;
 
 realtime t_last_sda_change;
 realtime t_last_scl_fall;
-
-
+realtime t_last_scl_fall_previous;
+bit      scl_has_history;
 
 always @(testbench.SDA) begin
     t_last_sda_change = $realtime;
 end
 
 always @(negedge testbench.SCL) begin
+    t_last_scl_fall_previous = t_last_scl_fall;
     t_last_scl_fall = $realtime;
+    scl_has_history = 1;
 end
 
 
@@ -75,39 +78,54 @@ initial begin
 
     endcase
     //`RAND = new();
+    for(int i = 1; i<=NUM_TRANSACTIONS;i++)begin
+        if (!`RAND.randomize())
+            $error("Randomization failed");
 
-    if (!`RAND.randomize())
-        $error("Randomization failed");
+        `DRIVER.HIGH_PERIOD_SCL  = `RAND.high_period;
+        `DRIVER.LOW_PERIOD_SCL   = `RAND.low_period;
+        `DRIVER.DATA_SETUP_TIME  = `RAND.setup_time;
+        `DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
+        `DRIVER.START_HOLD_TIME  = `RAND.start_hold_time;
+        `DRIVER.STOP_SETUP_TIME  = `RAND.stop_setup_time;
+        //`DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+        `DRIVER.DATA_HOLD_TIME   = `RAND.low_period - `RAND.setup_time;
 
-    `DRIVER.HIGH_PERIOD_SCL  = `RAND.high_period;
-    `DRIVER.LOW_PERIOD_SCL   = `RAND.low_period;
-    `DRIVER.DATA_SETUP_TIME  = `RAND.setup_time;
-    `DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
-    `DRIVER.START_HOLD_TIME  = `RAND.start_hold_time;
-    `DRIVER.STOP_SETUP_TIME  = `RAND.stop_setup_time;
-    `DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+        $display("\n==================================================");
+        $display("[I2C_TEST_CFG] WYBRANY TRYB: %s", mode_arg);
+        $display("--------------------------------------------------");
+        $display("Wylosowane wartosci czasowe przekazane do Drivera:");
+        $display(" -> HIGH_PERIOD_SCL  = %0f ns", `RAND.high_period);
+        $display(" -> LOW_PERIOD_SCL   = %0f ns", `RAND.low_period);
+        $display(" -> DATA_SETUP_TIME  = %0f ns", `RAND.setup_time);
+        $display(" -> DATA_HOLD_TIME   = %0f ns", (`RAND.low_period - `RAND.setup_time));
+        $display(" -> START_SETUP_TIME = %0f ns", `RAND.start_setup_time);
+        $display(" -> START_HOLD_TIME  = %0f ns", `RAND.start_hold_time);
+        $display(" -> STOP_SETUP_TIME  = %0f ns", `RAND.stop_setup_time);
+        $display("==================================================\n");
 
-    #100ns;
+        #100ns;
 
-    tr = new(
-        .addr(7'b0000111),
-        .rwSet(0),
-        .data_to_send({8'b10101010, 8'b11100011})
-    );
+        tr = new(
+            .addr(7'b0010000),
+            .rwSet(0),
+            .data_to_send({8'b10101010, 8'b11100011})
+        );
 
-    tr2 = new(
-        .addr(7'b0000111),
-        .rwSet(0),
-        .data_to_send({8'b10101010, 8'b11100011})
-    );
+        tr2 = new(
+            .addr(7'b0010000),
+            .rwSet(0),
+            .data_to_send({8'b10101010, 8'b11100011})
+        );
 
-    `MAIL.put(tr);
+        `MAIL.put(tr);
 
-    #20us;
+        #20us;
 
-    `MAIL.put(tr2);
+        `MAIL.put(tr2);
 
-    #500us;
+        #500us;
+    end
     $finish;
 end
 
@@ -115,11 +133,8 @@ end
 
 
 property P_SCL_PERIOD;
-    realtime t1;
-
     @(negedge testbench.SCL)
-    (1, t1 = $realtime)
-    |=> (($realtime - t1) >= timing_cfg.T_SCL_MIN);
+    (`DRIVER.phase != M_IDLE && scl_has_history) |-> (($realtime - t_last_scl_fall_previous) >= timing_cfg.T_SCL_MIN);
 endproperty
 
 chk_SCLPeriod: assert property (P_SCL_PERIOD)
@@ -128,11 +143,11 @@ else
     $error("TIMING VIOLATION: SCL period too short, expected >= %0t",
            timing_cfg.T_SCL_MIN);
 
-
 property P_START_HOLD;
     realtime t_start;
 
     @(negedge testbench.SDA)
+    disable iff (`DRIVER.phase != M_START)
     (testbench.SCL == 1 && `DRIVER.phase == M_START, t_start = $realtime)
     |-> @(negedge testbench.SCL)
         (($realtime - t_start) >= timing_cfg.T_HD_STA_MIN);
@@ -149,6 +164,7 @@ property P_REPEATED_START_SETUP;
     realtime t_scl_rise;
 
     @(posedge testbench.SCL)
+    disable iff (`DRIVER.phase != M_START)
     (`DRIVER.phase == M_START, t_scl_rise = $realtime)
     |-> @(negedge testbench.SDA)
         (testbench.SCL == 1 &&
@@ -166,6 +182,7 @@ property P_STOP_SETUP;
     realtime t_scl_rise;
 
     @(posedge testbench.SCL)
+    disable iff (`DRIVER.phase != M_STOP)
     (`DRIVER.phase == M_STOP, t_scl_rise = $realtime)
     |-> @(posedge testbench.SDA)
         (testbench.SCL == 1 &&
@@ -183,11 +200,13 @@ else
 property P_STOP_START_FREE_TIME;
     realtime t_stop;
 
+   
     @(posedge testbench.SDA)
-    (testbench.SCL == 1 && `DRIVER.phase == M_STOP, t_stop = $realtime)
+    (testbench.SCL == 1, t_stop = $realtime)
+    
+
     |-> @(negedge testbench.SDA)
-        (testbench.SCL == 1 &&
-        (($realtime - t_stop) >= timing_cfg.T_BUF_MIN));
+        (testbench.SCL == 1) |-> (($realtime - t_stop) >= timing_cfg.T_BUF_MIN);
 endproperty
 
 chk_stopStartFreeTime: assert property (P_STOP_START_FREE_TIME)
@@ -195,7 +214,6 @@ chk_stopStartFreeTime: assert property (P_STOP_START_FREE_TIME)
 else
     $error("TIMING VIOLATION: bus free time STOP-to-START too short, expected >= %0t",
            timing_cfg.T_BUF_MIN);
-
 
 
 

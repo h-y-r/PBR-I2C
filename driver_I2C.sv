@@ -1,6 +1,7 @@
 `timescale 1ns/10ps
 import transaction_class::*;
 
+/*
  class I2C_Config;
    rand realtime high_period;
    rand realtime low_period;
@@ -23,7 +24,85 @@ import transaction_class::*;
      stop_wait_time_err inside {[10000:30000]};
    }
  endclass
+*/
 
+import i2c_timing_types_pkg::*;
+
+
+ class I2C_Config;
+
+   i2c_mode_e mode;
+
+   rand int high_period;
+   rand int low_period;
+   rand int setup_time;
+   rand int start_setup_time;
+   rand int start_hold_time;
+   rand int stop_setup_time;
+   rand int rand_bit;
+   rand int hold_time;
+
+   function new();
+        mode = MODE_STD;
+   endfunction
+
+   // constraint mode_supported_c {
+   //      mode inside {MODE_STD, MODE_FAST, MODE_FMP};
+   //  }
+
+    constraint bit_c {
+        rand_bit inside {[0:7]};
+    }
+
+    /*
+   constraint i2c_time_const {
+     //Min High: 4000ns, Min Low: 4700ns, Min Setup Time: 250ns 
+     high_period inside {[4000:7000]}; 
+     low_period  inside {[4700:7000]};
+     setup_time  inside {[250:4700]};
+     start_setup_time  inside {[4700:7000]};
+     start_hold_time  inside {[4000:7000]};
+     stop_setup_time  inside {[4000:7000]};
+     rand_bit    inside {[0:7]};
+   }
+   */
+   constraint std_timing_c {
+
+        if (mode == MODE_STD) {
+            high_period       inside {[4000:7000]};
+            low_period        inside {[4700:7000]};
+            setup_time        inside {[250:4700]};
+            start_setup_time  inside {[4700:7000]};
+            start_hold_time   inside {[4000:7000]};
+            stop_setup_time   inside {[4000:7000]};
+            hold_time         inside {[0:1000]};
+        }
+    }
+
+    constraint fast_timing_c {
+        if (mode == MODE_FAST) {
+            high_period       inside {[600:2000]};
+            low_period        inside {[1300:2000]};
+            setup_time        inside {[100:1300]};
+            start_setup_time  inside {[600:2000]};
+            start_hold_time   inside {[600:2000]};
+            stop_setup_time   inside {[600:2000]};
+            hold_time         inside {[0:500]};
+        }
+    }
+
+    constraint fast_plus_timing_c {
+        if (mode == MODE_FMP) {
+            high_period       inside {[260:1000]};
+            low_period        inside {[500:1000]};
+            setup_time        inside {[50:500]};
+            start_setup_time  inside {[260:1000]};
+            start_hold_time   inside {[260:1000]};
+            stop_setup_time   inside {[260:1000]};
+            hold_time         inside {[0:250]};
+        }
+    }
+ endclass
 
 //wszystkie funkcje koncza tick przed negedge SCL
 module driver_I2C(input logic clk, inout SDA, inout SCL);
@@ -131,6 +210,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   task sendBit (input bit data);
     begin
+      //$display("[SPRAWDZAM_DRIVER] Czas: %0t | HIGH: %0d, LOW: %0d, HOLD: %0d, SETUP: %0d", $realtime, HIGH_PERIOD_SCL, LOW_PERIOD_SCL, DATA_HOLD_TIME, DATA_SETUP_TIME);
       SCL_ctrl = 0;
       #DATA_HOLD_TIME SDA_ctrl = data;
       #(DATA_SETUP_TIME) SCL_ctrl = 1;
@@ -176,7 +256,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       // dodane
       phase    = M_ADDR;
       byte_idx = -1;
-	   curr_addr = addr;
+	  curr_addr = addr;
       // koniec dodanego
 
       for (i = 6; i >= 0; i--) begin
@@ -242,8 +322,7 @@ task getACK(input bit is_addr_ack = 1'b0);
   task readBit(output bit data);
     begin
        SCL_ctrl = 0;
-       #DATA_HOLD_TIME SDA_ctrl = 1;
-       #(LOW_PERIOD_SCL - DATA_HOLD_TIME) SCL_ctrl = 1;
+       #LOW_PERIOD_SCL SCL_ctrl = 1;
        #1 data = SDA;
 	   #(HIGH_PERIOD_SCL - 1); 	
     end
@@ -414,10 +493,9 @@ task getACK(input bit is_addr_ack = 1'b0);
       // koniec dodanego
 
       sendStart();
-      #10;
-      SDA_ctrl =  1'b1;
-      SCL_ctrl =  1'b1;
-      #10;
+      SDA_ctrl =  1;
+      SCL_ctrl =  1;
+      #2;
       sendStart();
       sendAddressRW(addr, 1'b1);
 
