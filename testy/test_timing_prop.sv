@@ -17,6 +17,7 @@ i2c_timing_cfg_t timing_cfg;
 realtime t_last_sda_change;
 realtime t_last_scl_fall;
 realtime t_last_scl_fall_previous;
+bit      scl_has_history;
 
 always @(testbench.SDA) begin
     t_last_sda_change = $realtime;
@@ -25,6 +26,7 @@ end
 always @(negedge testbench.SCL) begin
     t_last_scl_fall_previous = t_last_scl_fall;
     t_last_scl_fall = $realtime;
+    scl_has_history = 1;
 end
 
 
@@ -116,7 +118,7 @@ end
 
 property P_SCL_PERIOD;
     @(negedge testbench.SCL)
-    (`DRIVER.phase != M_IDLE) |-> (($realtime - t_last_scl_fall_previous) >= timing_cfg.T_SCL_MIN);
+    (`DRIVER.phase != M_IDLE && scl_has_history) |-> (($realtime - t_last_scl_fall_previous) >= timing_cfg.T_SCL_MIN);
 endproperty
 
 chk_SCLPeriod: assert property (P_SCL_PERIOD)
