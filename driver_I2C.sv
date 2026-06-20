@@ -255,7 +255,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       // dodane
       phase    = M_ADDR;
       byte_idx = -1;
-	    curr_addr = addr;
+    curr_addr = addr;
       // koniec dodanego
 
       for (i = 6; i >= 0; i--) begin
