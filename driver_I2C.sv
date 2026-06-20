@@ -22,7 +22,6 @@ import transaction_class::*;
      stop_setup_time  inside {[4000:7000]};
      rand_bit    inside {[0:7]};
      stop_wait_time_err inside {[10000:30000]};
-   }
  endclass
 */
 
@@ -132,7 +131,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   call_phase selected_call = RESET;
 
   bit10_phase bit10;
-	
+  
   typedef mailbox #(Transaction) tr_mbx;
 
   tr_mbx tr_mailbox;
@@ -154,7 +153,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   int bit_idx  = BIT_ACK;  // poza danymi
   int byte_idx = -1;       // poza burstem
   bit last_ack = 1'b0;     // 1 ack 0 nack
-  bit [6:0] curr_addr;	
+  bit [6:0] curr_addr;  
   // koniec dodanego
 
   
@@ -165,12 +164,12 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       bit_idx  = BIT_ACK;
       byte_idx = -1;
       // koniec dodanego
-	  assert(SCL === 1'b1 && SDA === 1'b1) 
-	  	else $error("SDA i SCL muszą być 1!");
-		
-	  #(HIGH_PERIOD_SCL- START_HOLD_TIME);
+    assert(SCL === 1'b1 && SDA === 1'b1) 
+      else $error("SDA i SCL muszą być 1!");
+    
+    #(HIGH_PERIOD_SCL- START_HOLD_TIME);
       SDA_ctrl = 0;
-	  #(START_HOLD_TIME);
+    #(START_HOLD_TIME);
     end
   endtask
   
@@ -184,9 +183,9 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       SCL_ctrl = 0;
       #DATA_SETUP_TIME SDA_ctrl = 0;
       #(LOW_PERIOD_SCL - DATA_SETUP_TIME) SCL_ctrl = 1;
-	  #(STOP_SETUP_TIME) SDA_ctrl = 1;
-	  #(BUFF_TIME);
-		
+    #(STOP_SETUP_TIME) SDA_ctrl = 1;
+    #(BUFF_TIME);
+    
       // dodane
       phase = M_DONE;
       // koniec dodanego
@@ -199,12 +198,12 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       bit_idx  = BIT_ACK;
       byte_idx = -1;
 
-	  assert(SCL === 1'b0) 
-	  	else $error("SCL musi być 0!");
-	  SCL_ctrl = 1;		
-	  #(START_SETUP_TIME);
+    assert(SCL === 1'b0) 
+      else $error("SCL musi być 0!");
+    SCL_ctrl = 1;   
+    #(START_SETUP_TIME);
       SDA_ctrl = 0;
-	  #(START_HOLD_TIME);
+    #(START_HOLD_TIME);
     end
   endtask
   
@@ -236,7 +235,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
         phase = M_DATA_TX;
         // koniec dodanego
 
-      	for (i = 7; i >= 0; i--) begin
+        for (i = 7; i >= 0; i--) begin
           // dodane
           bit_idx = i;
           // koniec dodanego
@@ -256,7 +255,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
       // dodane
       phase    = M_ADDR;
       byte_idx = -1;
-	    curr_addr = addr;
+    curr_addr = addr;
       // koniec dodanego
 
       for (i = 6; i >= 0; i--) begin
@@ -322,9 +321,10 @@ task getACK(input bit is_addr_ack = 1'b0);
   task readBit(output bit data);
     begin
        SCL_ctrl = 0;
-       #LOW_PERIOD_SCL SCL_ctrl = 1;
+       #DATA_HOLD_TIME SDA_ctrl = 1;
+       #(LOW_PERIOD_SCL - DATA_HOLD_TIME) SCL_ctrl = 1;
        #1 data = SDA;
-	   #(HIGH_PERIOD_SCL - 1); 	
+       #(HIGH_PERIOD_SCL - 1);  
     end
   endtask    
 
@@ -333,13 +333,13 @@ task getACK(input bit is_addr_ack = 1'b0);
       // dodane
       phase = M_DATA_RX;
       // koniec dodanego
-	  data_got = 8'b0;	
+    data_got = 8'b0;  
       for (i = 7; i >= 0; i--) begin
         // dodane
-      	bit_idx = i;
+        bit_idx = i;
         // koniec dodanego
 
-      	readBit(data_got[i]);
+        readBit(data_got[i]);
       end
 
       // dodane
@@ -672,8 +672,8 @@ task getACK(input bit is_addr_ack = 1'b0);
 
       // dodane ack po adresie 
       getACK(1'b1);
-    	  // koniec dodanego
-	     phase = M_DATA_TX;
+        // koniec dodanego
+       phase = M_DATA_TX;
       if(ack_got) begin
         for (i = 7; i >= 7-randbit; i--) begin
           bit_idx  = i;
@@ -778,201 +778,201 @@ task getACK(input bit is_addr_ack = 1'b0);
       sendStop();
     end
   endtask
-	
+  
 task sendAdress10Bit(input bit [9:0] addr);
-	static bit [4:0] code = 5'b11110;
-	byte_idx = -1;
-	sendStart();
+  static bit [4:0] code = 5'b11110;
+  byte_idx = -1;
+  sendStart();
   phase = M_ADDR_10BIT;
-	
-	for (i = 4; i >= 0; i--) begin
+  
+  for (i = 4; i >= 0; i--) begin
       bit_idx  = i+3;
-		  sendBit(code[i]);
-	end
-	
+      sendBit(code[i]);
+  end
+  
   bit_idx  = 2;
-	sendBit(addr[9]);
+  sendBit(addr[9]);
   bit_idx  = 1;
-	sendBit(addr[8]);
+  sendBit(addr[8]);
   bit_idx  = 0;
   sendBit(1'b0);
-	
-	SDA_ctrl = 1;
+  
+  SDA_ctrl = 1;
     getACK(1'b1); 
     ack_got = 0;   
-	for (i = 7; i >= 0; i--) begin
+  for (i = 7; i >= 0; i--) begin
         bit_idx = i;
         sendBit(addr[i]);
   end
 
-	SDA_ctrl = 1;
-    getACK(1'b1); 		
+  SDA_ctrl = 1;
+    getACK(1'b1);     
 endtask
 
 task writeTransaction10BIT(input bit [9:0] addr, input bit [7:0] data);
-	sendAdress10Bit(addr);
-	
+  sendAdress10Bit(addr);
+  
   bit10 = WRITE_10BIT;
-	if(ack_got) begin
-	sendData(data);
-	// (opcjonalnie) jeśli sprwadzamy ACK po danych
-	getACK(1'b0);
-	end
+  if(ack_got) begin
+  sendData(data);
+  // (opcjonalnie) jeśli sprwadzamy ACK po danych
+  getACK(1'b0);
+  end
 
-	sendStop();	
+  sendStop(); 
 endtask
 
 task readTransaction10BIT(input bit [9:0] addr);
-	static bit [4:0] code = 5'b11110;
-	sendAdress10Bit(addr);
-	sendRepeatedStart();
-	
-	for (i = 4; i >= 0; i--) begin
+  static bit [4:0] code = 5'b11110;
+  sendAdress10Bit(addr);
+  sendRepeatedStart();
+  
+  for (i = 4; i >= 0; i--) begin
           bit_idx  = i;
-		  sendBit(code[i]);
-	end
-	
-	sendBit(addr[9]);
-	sendBit(addr[8]);
-	bit_idx = BIT_RW;
-	sendBit(1'b1);
-	SDA_ctrl = 1;
+      sendBit(code[i]);
+  end
+  
+  sendBit(addr[9]);
+  sendBit(addr[8]);
+  bit_idx = BIT_RW;
+  sendBit(1'b1);
+  SDA_ctrl = 1;
     getACK(1'b1); 
-	
+  
   bit10 = READ_10BIT;
-	if(ack_got) begin
-		readData();
-	end
+  if(ack_got) begin
+    readData();
+  end
 
-	// NACK po ostatnim bajcie read (master->target)
-	phase   = M_ACK_DATA;
-	bit_idx = BIT_ACK;
+  // NACK po ostatnim bajcie read (master->target)
+  phase   = M_ACK_DATA;
+  bit_idx = BIT_ACK;
 
-	sendBit(1'b1);
-	sendStop();
+  sendBit(1'b1);
+  sendStop();
 endtask
 
 
 task getDeviceID(input bit [6:0] addr);
 static int numBytes = 2;
 begin
-	static bit [7:0] devID1 = 8'b11111000;
-	static bit [7:0] devID2 = 8'b11111001;
-	phase = M_DEVICE_ID;	
-	sendStart();
-	
-	for (i = 7; i >= 0; i--) begin
+  static bit [7:0] devID1 = 8'b11111000;
+  static bit [7:0] devID2 = 8'b11111001;
+  phase = M_DEVICE_ID;  
+  sendStart();
+  
+  for (i = 7; i >= 0; i--) begin
         bit_idx = i;
         sendBit(devID1[i]);
     end
-	
+  
     SDA_ctrl = 1;
-	getACK(1'b1);
-	
-	phase = M_SEND_ADDR_FOR_ID;
-	for (i = 6; i >= 0; i--) begin
+  getACK(1'b1);
+  
+  phase = M_SEND_ADDR_FOR_ID;
+  for (i = 6; i >= 0; i--) begin
         bit_idx = i;
         sendBit(addr[i]);
-    end	
-	sendBit(1'b1); //dont care bit
-	
-	SDA_ctrl = 1;
-	getACK(1'b1);
-	
-	sendStart();
-	
-	for (i = 7; i >= 0; i--) begin
+    end 
+  sendBit(1'b1); //dont care bit
+  
+  SDA_ctrl = 1;
+  getACK(1'b1);
+  
+  sendStart();
+  
+  for (i = 7; i >= 0; i--) begin
         bit_idx = i;
         sendBit(devID2[i]);
     end
-	
-	SDA_ctrl = 1;
-	getACK(1'b1);
-	
-	if(ack_got) begin
-	for (i= 3; i > 0; i--) begin
-	  byte_idx = (numBytes - i);
+  
+  SDA_ctrl = 1;
+  getACK(1'b1);
+  
+  if(ack_got) begin
+  for (i= 3; i > 0; i--) begin
+    byte_idx = (numBytes - i);
 
-	  readData();
-	  if(i>1) begin
-		// ACK po bajcie read (master potwierdza że chce kolejny)
-		bit_idx = BIT_ACK;
-		sendBit(1'b0);
-	  end
-	end
-	end
-	
-	sendStop();
+    readData();
+    if(i>1) begin
+    // ACK po bajcie read (master potwierdza że chce kolejny)
+    bit_idx = BIT_ACK;
+    sendBit(1'b0);
+    end
+  end
+  end
+  
+  sendStop();
 end
 endtask
 
 task generalCalls(bit [1:0] callSelect);
-	static bit [7:0] reset_write = 8'b00000110;
-	static bit [7:0] write = 8'b00000100;
-	static bit [7:0] hardware_call = 8'b00000001; //dummy plus bit B = 1;
-	
-	sendStart();
-	
-	phase = M_GENERAL_CALL;
-	
-	for (i = 7; i >= 0; i--) begin //first byte
+  static bit [7:0] reset_write = 8'b00000110;
+  static bit [7:0] write = 8'b00000100;
+  static bit [7:0] hardware_call = 8'b00000001; //dummy plus bit B = 1;
+  
+  sendStart();
+  
+  phase = M_GENERAL_CALL;
+  
+  for (i = 7; i >= 0; i--) begin //first byte
         bit_idx = i;
         sendBit(1'b0);
     end
-	
-	SDA_ctrl = 1;
-	getACK(1'b1);
-	
-	if(ack_got) begin
-		ack_got = 0;
-		case (callSelect)
-			2'b00: //reset and write (06h)
-				begin
-				selected_call = RESET;
-					for (i = 7; i >= 0; i--) begin
-						bit_idx = i;
-						sendBit(reset_write[i]);
-					end
-					getACK(1'b1);
-				end
-			2'b01: //write (04h)
-				begin
-				selected_call = WRITE;
-					for (i = 7; i >= 0; i--) begin
-						bit_idx = i;
-						sendBit(write[i]);
-					end
-					getACK(1'b1);
-				end
-			2'b10: //nielegalny call (00h)
-				begin
-				selected_call = ILLEGAL;
-					for (i = 7; i >= 0; i--) begin
-						bit_idx = i;
-						sendBit(1'b0);
-					end
-					getACK(1'b1);
-				end
-			2'b11: //hardware call (B = 1)
-				begin
-				selected_call = HARDWARE;
-					for (i = 7; i >= 0; i--) begin
-						bit_idx = i;
-						sendBit(hardware_call[i]);
-					end
-					getACK(1'b1);
-					if(ack_got) begin
-						for (i = 7; i >= 0; i--) begin
-							bit_idx = i;
-							sendBit(8'b10101010); //random data
-						end
-					getACK(1'b1);
-					sendStop();
+  
+  SDA_ctrl = 1;
+  getACK(1'b1);
+  
+  if(ack_got) begin
+    ack_got = 0;
+    case (callSelect)
+      2'b00: //reset and write (06h)
+        begin
+        selected_call = RESET;
+          for (i = 7; i >= 0; i--) begin
+            bit_idx = i;
+            sendBit(reset_write[i]);
           end
-				end
-		endcase
-			
-	end
+          getACK(1'b1);
+        end
+      2'b01: //write (04h)
+        begin
+        selected_call = WRITE;
+          for (i = 7; i >= 0; i--) begin
+            bit_idx = i;
+            sendBit(write[i]);
+          end
+          getACK(1'b1);
+        end
+      2'b10: //nielegalny call (00h)
+        begin
+        selected_call = ILLEGAL;
+          for (i = 7; i >= 0; i--) begin
+            bit_idx = i;
+            sendBit(1'b0);
+          end
+          getACK(1'b1);
+        end
+      2'b11: //hardware call (B = 1)
+        begin
+        selected_call = HARDWARE;
+          for (i = 7; i >= 0; i--) begin
+            bit_idx = i;
+            sendBit(hardware_call[i]);
+          end
+          getACK(1'b1);
+          if(ack_got) begin
+            for (i = 7; i >= 0; i--) begin
+              bit_idx = i;
+              sendBit(8'b10101010); //random data
+            end
+          getACK(1'b1);
+          sendStop();
+          end
+        end
+    endcase
+      
+  end
 endtask
 
 task addrOnly(input bit [6:0] addr); 
@@ -1037,7 +1037,7 @@ task addrOnly(input bit [6:0] addr);
       sendStop();
     end
   endtask
-	
+  
   task burstReadError(input bit [6:0] addr, input int numBytes); 
     begin
       int k;
@@ -1082,7 +1082,7 @@ task addrOnly(input bit [6:0] addr);
 
     end
   endtask
-			
+      
 task transactionDriver();
   begin
     Transaction tr;
