@@ -7,10 +7,10 @@
 import transaction_class::*;
 
 
-module tst_addrOnly;
+module basic_test;
 
 // Deklaracje zmiennych
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 event assert_chk_ackAddrOnly;
 bit lastAck;
@@ -35,8 +35,8 @@ initial begin
 
 		`DRIVER.addrOnly(7'b0010000);
 
-		wait(`DRIVER.phase == M_START);
-		wait(`DRIVER.phase == M_DONE);
+		//wait(`DRIVER.phase == M_START);
+		//wait(`DRIVER.phase == M_DONE);
 		lastAck = `DRIVER.last_ack;
 		->assert_chk_ackAddrOnly;
 	end

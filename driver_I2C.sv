@@ -923,7 +923,7 @@ task generalCalls(bit [1:0] callSelect);
   SDA_ctrl = 1;
   getACK(1'b1);
   
-  if(ack_got) begin
+  //if(ack_got) begin
     ack_got = 0;
     case (callSelect)
       2'b00: //reset and write (06h)
@@ -961,18 +961,18 @@ task generalCalls(bit [1:0] callSelect);
             sendBit(hardware_call[i]);
           end
           getACK(1'b1);
-          if(ack_got) begin
+          //if(ack_got) begin
             for (i = 7; i >= 0; i--) begin
               bit_idx = i;
               sendBit(8'b10101010); //random data
             end
           getACK(1'b1);
           sendStop();
-          end
+          //end
         end
     endcase
       
-  end
+  //end
 endtask
 
 task addrOnly(input bit [6:0] addr); 

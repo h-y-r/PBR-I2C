@@ -24,7 +24,7 @@ class data;
     rand logic [7:0] byte16;
 endclass
 
-module tst_repeatedWriteSameAddr;
+module basic_test;
 int j = 0;
 int k = 0;
 // Deklaracje zmiennych
@@ -39,7 +39,7 @@ event assert_chk_dataFullBuff;
 event assert_chk_outOfRange;
 
 parameter int NUM_TRANSACTIONS = 8;
-parameter int NUM_RUNS = 8;
+int NUM_RUNS = testbench.NUM_TRANSACTIONS;
 
 bit [7:0] dataOut [2*NUM_TRANSACTIONS-1:0];
 bit [7:0] dataIn  [2*NUM_TRANSACTIONS-1:0];

@@ -3,7 +3,8 @@
 `define MAIL testbench.dv_i2c.tr_mailbox
 `define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
-module tst_reservedAddr;
+
+module basic_test;
 
 bit DIFFERENT_BUS_FORMAT_ENABLE = 1'b0;
 bit RESERVED_ADDR_ENABLE = 1'b0;

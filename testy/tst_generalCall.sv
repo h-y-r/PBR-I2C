@@ -7,7 +7,7 @@
 
 import transaction_class::*;
 
-module test;
+module basic_test;
 
 property GENERAL_CALL_IGNORE;
 	@(posedge testbench.SCL)
@@ -20,7 +20,6 @@ property GENERAL_CALL_RESET_AND_WRTIE;
 	@(posedge testbench.SCL) //general call 8'b0 + ack + 00000110 + ack
 	((`DRIVER.phase == M_GENERAL_CALL) && (`DRIVER.selected_call == RESET) && (`DRIVER.bit_idx == 0))  //driver daje adres
 	|=> (testbench.SDA == 1'b0) //ack
-	//|=> (`TARGET.state == 0); //reset slave
 endproperty
 
 property GENERAL_CALL_WRTIE;
@@ -38,13 +37,11 @@ endproperty
 
 property HARDWARE_GENERAL_CALL;
 	@(posedge testbench.SCL) //general call 8'b0 + ack + 00000001 + nack 
-	((`DRIVER.phase == M_GENERAL_CALL) && (`DRIVER.selected_call == RESET) && (`DRIVER.bit_idx == -2))  //driver daje adres
-	##0 (testbench.SDA == 1'b0) //ack od slave
-	##[1:8]((`DRIVER.phase == M_GENERAL_CALL) && (`DRIVER.selected_call == RESET) && (`DRIVER.bit_idx == -2))  //driver daje adres
-	|-> (testbench.SDA == 1'b0) //ack od slave
+	((`DRIVER.phase == M_GENERAL_CALL) && (`DRIVER.selected_call == HARDWARE) && (`DRIVER.bit_idx == 0))  //driver daje adres
+	|=> (testbench.SDA == 1'b0) //nack od slave
 endproperty
 
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
 	Transaction tr;

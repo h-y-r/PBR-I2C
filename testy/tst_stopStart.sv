@@ -12,7 +12,7 @@ class data;
 	rand logic [7:0] byte2;
 endclass
 
-module test;
+module basic_test;
 
 // Deklaracje zmiennych
 bit signal;
@@ -32,7 +32,7 @@ event assert_chk_startNoAck;
 realtime time1;
 realtime time2;
 
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 
 property STOP_IMMEDIATELY_AFTER_START;
@@ -64,13 +64,13 @@ initial begin
 		$error("blad");
 		end	
 		tr1 = new(
-	        .addr(7'b0000111), 
+	        .addr(7'b0010000), 
 	        .rwSet(0), 
 	        .data_to_send({randdata.byte1})
 	    );
 
 		tr2 = new(
-	        .addr(7'b0000111), 
+	        .addr(7'b0010000), 
 	        .rwSet(0), 
 	        .data_to_send({randdata.byte2})
 	    );

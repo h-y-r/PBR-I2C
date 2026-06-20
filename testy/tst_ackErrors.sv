@@ -6,7 +6,7 @@
 
 import transaction_class::*;
 
-module tst_ackErrors;
+module basic_test;
 
 bit RW_BIT;
 bit prev_sda;
@@ -19,7 +19,7 @@ realtime ackAtEnd_time;
 event assert_chk_nackInMid;
 event assert_chk_ackAtEnd;
 
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
     Transaction tr;

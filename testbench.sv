@@ -11,8 +11,18 @@ module testbench;
   logic clk;
   logic rst;
 
+  parameter int NUM_TRANSACTIONS = 20;
+
   initial clk = 0;
   always #10 clk = ~clk;
+
+  // target_stary tg_i2c(
+  //   .data_send (16'h8041),
+  //   .rst(rst),      
+  //   .clk(clk), 
+  //   .SDA_bidir(SDA),      
+  //   .SCL_bidir(SCL) 
+  // );
   
   target_I2C tg_i2c(
     .sda(SDA),      
@@ -24,6 +34,8 @@ module testbench;
     .SDA(SDA),
     .SCL(SCL)
   );
+
+  basic_test test();
 
   I2C_Config i2c_cfg;
 	

@@ -7,7 +7,7 @@
 
 import transaction_class::*;
 
-module test;
+module basic_test;
 
 property GET_DEVICE_ID;
 	@(posedge testbench.SCL)
@@ -15,7 +15,13 @@ property GET_DEVICE_ID;
 	|=> (testbench.SDA == 1'b0)//mozna jeszcze dodac, ale najpierw zobaczyc czy na to odpowie
 endproperty
 
-parameter int NUM_TRANSACTIONS = 20;
+property IGNORE_DEVICE_ID;
+	@(posedge testbench.SCL)
+	((`DRIVER.phase == M_SEND_ADDR_FOR_ID) && (`DRIVER.bit_idx == 0)) 
+	|=> (testbench.SDA == 1'b1)//mozna jeszcze dodac, ale najpierw zobaczyc czy na to odpowie
+endproperty
+
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
 	Transaction tr;
@@ -36,13 +42,16 @@ initial begin
 	#100ns;
 		
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin		
-		`DRIVER.getDeviceID(7'b0000111);	
+		`DRIVER.getDeviceID(7'b0010000);	
 		#100ns;
 	end
 	$finish(0);
 end
 
-tst_getDeviceID: assert property (GET_DEVICE_ID) $display("chk_getDeviceID PASSED!");
+tst_ignoreDeviceID: assert property (IGNORE_DEVICE_ID) $display("chk_ignoreDeviceID PASSED!");
+		else $error("chk_ignoreDeviceID FAILED!");	
+
+tst_getDeviceID: assert property (GET_DEVICE_ID or IGNORE_DEVICE_ID) $display("chk_getDeviceID PASSED!");
 		else $error("chk_getDeviceID FAILED!");	
 		
 endmodule

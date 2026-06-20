@@ -26,7 +26,7 @@ parameter BYTES_SEND = 2;                               //Number of bytes to be 
 parameter BITS_SEND=BYTES_SEND<<3;                      //Calculation of number of bit to be sent
 parameter BYTES_RECEIVE=1;                              //Number of bytes to be received (controller-->target)
 parameter BITS_RECEIVE=BYTES_RECEIVE<<3;                //Calculation of number of bits to be received
-parameter ADDR_TARGET=7'b0000111;                       //Target address
+parameter ADDR_TARGET=7'b0010000;                       //Target address
 parameter STRETCH = 0;                                  //Number of clock cycles for clock-stretching after each address\data byte
 
 //Input Deceleration

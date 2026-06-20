@@ -3,7 +3,8 @@
 `define MAIL testbench.dv_i2c.tr_mailbox
 `define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
-module tst_noTransaction;
+
+module basic_test;
 
 // Deklaracje zmiennych
 bit TARGET_START = 1;
@@ -12,7 +13,7 @@ bit FREE_BUS;
 event assert_chk_freeBusIsHigh;
 event assert_chk_targetDoesNotGenerateStart;
 
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
 	`RAND = new();

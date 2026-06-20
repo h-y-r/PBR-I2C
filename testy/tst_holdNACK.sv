@@ -7,10 +7,10 @@
 import transaction_class::*;
 
 
-module tst_holdNACK;
+module basic_test;
 
 // Deklaracje zmiennych
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 event assert_chk_holdNACK;
 bit lastAck;

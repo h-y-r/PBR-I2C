@@ -6,7 +6,7 @@
 
 import transaction_class::*;
 
-module tst_readTransaction;
+module basic_test;
 
 bit DATA_STABLE = 1;
 bit NO_STOP = 1;
@@ -20,8 +20,7 @@ bit start_assert = 0;
 event assert_chk_dataStableWhenSCLHigh;
 event assert_chk_RWBitRead;
 event assert_chk_targetDoesNotGenerateStop;
-
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
     Transaction tr;

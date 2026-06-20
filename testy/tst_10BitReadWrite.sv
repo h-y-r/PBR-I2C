@@ -7,7 +7,9 @@
 
 import transaction_class::*;
 
-module test;
+module basic_test;
+
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;	
 
 property ADRESS_10BIT;
 	@(posedge testbench.SCL)
@@ -17,14 +19,14 @@ endproperty
 
 property WRITE_DATA_10BIT;
     @(posedge testbench.SCL)
-    ((`DRIVER.bit10 == WRITE_10BIT) && (`DRIVER.bit_idx == -2)) 
+    ((`DRIVER.bit10 == WRITE_10BIT) && (`DRIVER.bit_idx == 0)) 
     |-> 
     (`DRIVER.phase == M_DATA_TX)// robi write
 endproperty
 
 property READ_DATA_10BIT;
     @(posedge testbench.SCL)
-    ((`DRIVER.bit10 == READ_10BIT) && (`DRIVER.bit_idx == -2)) 
+    ((`DRIVER.bit10 == READ_10BIT) && (`DRIVER.bit_idx == 0)) 
     |-> 
     (`DRIVER.phase == M_DATA_RX)// robi read
 endproperty
@@ -35,7 +37,6 @@ property IGNORE_10BIT;
 	|=> (testbench.SDA == 1'b1); // NACK po 1 bajcie adresu
 endproperty	
 
-parameter int NUM_TRANSACTIONS = 20;
 
 initial begin
 	`RAND = new();
@@ -54,9 +55,9 @@ initial begin
 	#100ns;
 
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin		
-		`DRIVER.writeTransaction10BIT(10'b0000000111, 8'b10101010);
+		`DRIVER.writeTransaction10BIT(10'b0000010000, 8'b10101010);
 		#`DRIVER.BUFF_TIME;
-		`DRIVER.readTransaction10BIT(10'b0000000111);
+		`DRIVER.readTransaction10BIT(10'b0000010000);
 		#100us;
 	end
 	

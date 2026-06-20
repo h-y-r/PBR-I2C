@@ -10,7 +10,7 @@ class data;
 	rand logic [7:0] byte2;
 endclass
 
-module tst_writeTransaction;
+module basic_test;
 
 // Deklaracje zmiennych
 bit ACK_AFTER_BYTE;
@@ -26,7 +26,7 @@ event assert_chk_clockStretch;
 realtime stretch_time1;
 realtime stretch_time2;
 
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 property ACK_AFTER_DATA;
 	@(posedge testbench.SCL)
@@ -73,12 +73,12 @@ initial begin
 		ACK_AFTER_ADDR = `DRIVER.last_ack;
 		-> assert_chk_addressExists;
 
-	    // wait (`TARGET.state == 5);
-		// stretch_time1 = $realtime();
-		// @(posedge testbench.SCL) stretch_time2 = $realtime();
-		// CLOCK_STRETCH = ((stretch_time2 - stretch_time1) <= (`TARGET.STRETCH + 2) *  20ns);
-		// $display("%0t",stretch_time2-stretch_time1);
-		// -> assert_chk_clockStretch;
+	    wait (testbench.SCL == 1'b0);
+		stretch_time1 = $realtime();
+		@(posedge testbench.SCL) stretch_time2 = $realtime();
+		CLOCK_STRETCH = ((stretch_time2 - stretch_time1) >= (`DRIVER.LOW_PERIOD_SCL ));
+		$display("%0t",stretch_time2-stretch_time1);
+		-> assert_chk_clockStretch;
 		
 		wait (`DRIVER.phase == M_ACK_DATA);
 		wait (`DRIVER.phase == M_DATA_TX);

@@ -16,7 +16,7 @@ class data;
     rand logic [7:0] byte8;
 endclass
 
-module tst_writeTransaction;
+module basic_test;
 int j = 0;
 int k = 0;
 // Deklaracje zmiennych
@@ -33,7 +33,7 @@ event assert_chk_outOfRange;
 event assert_chk_dataFromMSB;
 
 parameter int NUM_TRANSACTIONS = 8;
-parameter int NUM_RUNS = 8;
+int NUM_RUNS = testbench.NUM_TRANSACTIONS;
 
 bit [7:0] dataOut [NUM_TRANSACTIONS-1:0];
 bit [7:0] dataIn  [NUM_TRANSACTIONS-1:0];

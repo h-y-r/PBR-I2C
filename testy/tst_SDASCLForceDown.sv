@@ -10,16 +10,16 @@ class data;
 	rand logic [7:0] byte2;
 endclass
 
-module tst_SDASCLForceDown;
+module basic_test;
 
 // Deklaracje zmiennych
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 property ACK_AFTER_DATA;
 	@(posedge testbench.SCL)
 	(`DRIVER.phase == M_DATA_TX && (`DRIVER.bit_idx == 0))
 	|->
-	(`DRIVER.ack_got == 1'b1);
+	##1 (testbench.SDA == 1'b0);
 endproperty	
 
 initial begin
@@ -37,37 +37,36 @@ initial begin
 	`DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
 	`DRIVER.START_HOLD_TIME = `RAND.start_hold_time;
 	`DRIVER.STOP_SETUP_TIME = `RAND.stop_setup_time;
-	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
+	`DRIVER.DATA_HOLD_TIME = `RAND.low_period - `RAND.setup_time;	
 	#100ns;
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
 		if (!random_bytes.randomize()) begin
 			$error("blad - randomizacja danych");
 		end
-		testbench.rst = 1;
-		#10;
+
+		force testbench.SDA = 1'b0;
+		force testbench.SCL = 1'b0;
+
 		testbench.rst = 0;
 		#10;
 		testbench.rst = 1;
 		#10;
 
-		force testbench.SDA = 1'b0;
-		force testbench.SCL = 1'b0;
-
-		#100;
-
 		release testbench.SDA;
 		release testbench.SCL;
 
-		#10;
+		#100;
 
 		tr = new(
-	        .addr(7'b0000111), 
+	        .addr(7'b0010000), 
 	        .rwSet(0), 
-	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
+	        .data_to_send({8'd0, random_bytes.byte2})
 	    );
 		
 		`MAIL.put(tr);
+		wait(`DRIVER.phase == M_START);
 		wait(`DRIVER.phase == M_DONE);
+		#50;
 	end
 	$finish();
 end

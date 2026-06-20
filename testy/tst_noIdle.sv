@@ -10,10 +10,10 @@ class data;
 	rand logic [7:0] byte2;
 endclass
 
-module tst_noIdle;
+module basic_test;
 
 // Deklaracje zmiennych
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 property ACK_AFTER_DATA;
 	@(posedge testbench.SCL)
@@ -50,7 +50,7 @@ initial begin
 		testbench.rst = 1;
 
 		tr = new(
-	        .addr(7'b0000111), 
+	        .addr(7'b0010000), 
 	        .rwSet(0), 
 	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
 	    );

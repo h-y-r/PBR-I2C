@@ -3,7 +3,8 @@
 `define MAIL testbench.dv_i2c.tr_mailbox
 `define RAND testbench.dv_i2c.i2c_cfg
 `define TRANS testbench.test_tr
-module tst_combinedFormatForMemoryAddressing_write;
+
+module basic_test;
 
 // Deklaracje zmiennych
 

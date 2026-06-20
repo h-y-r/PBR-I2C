@@ -7,7 +7,7 @@
 
 import transaction_class::*;
 
-module tst_stopStartErr;
+module basic_test;
 
 class rand_bit;
     rand int stopbit;
@@ -90,7 +90,7 @@ property REPEATED_START_NO_STOP;
 endproperty
 
 
-parameter int NUM_TRANSACTIONS = 1;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
     rand_bit stopbit;

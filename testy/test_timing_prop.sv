@@ -7,11 +7,11 @@
 import transaction_class::*;
 import i2c_timing_types_pkg::*;
 
-module test;
+module basic_test;
 
 timeunit 1ns;
 timeprecision 1ps;
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 i2c_timing_cfg_t timing_cfg;
 
@@ -147,8 +147,8 @@ property P_START_HOLD;
     realtime t_start;
 
     @(negedge testbench.SDA)
-    disable iff (`DRIVER.phase != M_START)
-    (testbench.SCL == 1 && `DRIVER.phase == M_START, t_start = $realtime)
+    //disable iff (`DRIVER.phase != M_START)
+    (testbench.SCL == 1 && (`DRIVER.phase == M_START || `DRIVER.phase == M_ADDR || `DRIVER.phase == M_IDLE), t_start = $realtime)
     |-> @(negedge testbench.SCL)
         (($realtime - t_start) >= timing_cfg.T_HD_STA_MIN);
 endproperty

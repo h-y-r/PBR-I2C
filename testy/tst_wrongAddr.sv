@@ -10,10 +10,10 @@ class rand_addr;
 	rand logic [6:0] randaddr;
 endclass
 
-module tst_wrongAddr;
+module basic_test;
 
 // Deklaracje zmiennych
-parameter int NUM_TRANSACTIONS = 20;
+int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 property NACK_AFTER_WRONG_ADDR;
 	@(posedge testbench.SCL)
@@ -28,7 +28,7 @@ initial begin
 	logic[6:0] correct_address;
 	logic[6:0] wrong_address;
 	address = new();
-	correct_address = 7'b0000111;
+	correct_address = 7'b0010000;
 	
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -50,7 +50,7 @@ initial begin
 		if (!address.randomize()) begin
 			$error("blad");
 		end
-		while(address.randaddr == 7'b0000111) begin
+		while(address.randaddr == 7'b0010000) begin
 			if (!address.randomize()) begin
 				$error("blad");
 			end
