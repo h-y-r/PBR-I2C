@@ -40,6 +40,7 @@ import i2c_timing_types_pkg::*;
    rand realtime start_hold_time;
    rand realtime stop_setup_time;
    rand realtime rand_bit;
+   rand realtime hold_time;
 
    function new();
         mode = MODE_STD;
