@@ -3,11 +3,10 @@
 `define MAIL testbench.dv_i2c.tr_mailbox
 `define RAND testbench.i2c_cfg
 `define TRANS testbench.test_tr
-`define TARGET_BITS testbench.tg_i2c.data_send 
 
 import transaction_class::*;
 
-module tst_readTransaction;
+module tst_ackErrors;
 
 bit RW_BIT;
 bit prev_sda;
@@ -21,21 +20,6 @@ event assert_chk_nackInMid;
 event assert_chk_ackAtEnd;
 
 parameter int NUM_TRANSACTIONS = 20;
-
-property DATA_TRANSFER_FROM_MSB;
-    logic [7:0] sampleBits;
-    @(posedge testbench.SCL)
-    (`DRIVER.phase == M_DATA_RX) && (`DRIVER.bit_idx == 7)
-    ##0 (1, sampleBits[7] = testbench.SDA)
-    ##1 (1, sampleBits[6] = testbench.SDA)
-    ##1 (1, sampleBits[5] = testbench.SDA)
-    ##1 (1, sampleBits[4] = testbench.SDA)
-    ##1 (1, sampleBits[3] = testbench.SDA)
-    ##1 (1, sampleBits[2] = testbench.SDA)
-    ##1 (1, sampleBits[1] = testbench.SDA)
-    ##1 (1, sampleBits[0] = testbench.SDA)
-    |-> (sampleBits == `TARGET_BITS[15:8]);
-endproperty
 
 initial begin
     Transaction tr;
@@ -56,21 +40,12 @@ initial begin
     `DRIVER.STOP_SETUP_TIME   = `RAND.stop_setup_time;
     `DRIVER.DATA_HOLD_TIME    = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
 
-    tr = new(
-        .addr(7'b0010000), 
-        .rwSet(0), 
-        .data_to_send({8'd0})
-    );
-    `MAIL.put(tr);
-
-    wait (`DRIVER.phase == M_DONE);
-
-    `DRIVER.burstReadError(7'b0000111, 2);
+    `DRIVER.burstReadError(7'b0010000, 2);
 
     wait (`DRIVER.phase == M_ACK_DATA);
     prev_sda = testbench.SDA;
     wait (testbench.SCL == 1);	
-    nackInMid = (prev_sda != testbench.SDA);
+    nackInMid = (prev_sda == testbench.SDA);
     nackInMid_time = $realtime();
     -> assert_chk_nackInMid;
 
@@ -91,7 +66,7 @@ end
 
 always @(assert_chk_nackInMid) begin
     chk_nackInMid : assert(nackInMid)
-        $display("chk_nackInMid");
+        $display("chk_nackInMid PASSED");
         else $error("chk_nackInMid FAILED at time %0t", nackInMid_time);
 end
 
