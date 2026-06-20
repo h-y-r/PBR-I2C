@@ -31,24 +31,24 @@ import i2c_timing_types_pkg::*;
 
  class I2C_Config;
 
-   rand i2c_mode_e mode;
+   i2c_mode_e mode;
 
-   rand realtime high_period;
-   rand realtime low_period;
-   rand realtime setup_time;
-   rand realtime start_setup_time;
-   rand realtime start_hold_time;
-   rand realtime stop_setup_time;
-   rand realtime rand_bit;
-   rand realtime hold_time;
+   rand int high_period;
+   rand int low_period;
+   rand int setup_time;
+   rand int start_setup_time;
+   rand int start_hold_time;
+   rand int stop_setup_time;
+   rand int rand_bit;
+   rand int hold_time;
 
    function new();
         mode = MODE_STD;
    endfunction
 
-   constraint mode_supported_c {
-        mode inside {MODE_STD, MODE_FAST, MODE_FMP};
-    }
+   // constraint mode_supported_c {
+   //      mode inside {MODE_STD, MODE_FAST, MODE_FMP};
+   //  }
 
     constraint bit_c {
         rand_bit inside {[0:7]};
