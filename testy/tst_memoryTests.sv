@@ -50,7 +50,9 @@ initial begin
     Transaction tr;
     Transaction tr2;
     Transaction tr3;
-    data random_bytes = new();
+    data random_bytes;
+    
+    random_bytes = new();
 
     `RAND = new();
     if (!`RAND.randomize()) begin

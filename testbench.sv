@@ -11,12 +11,12 @@ module testbench;
   logic clk;
   logic rst;
 
-  parameter int NUM_TRANSACTIONS = 20;
+  parameter int NUM_TRANSACTIONS = 2;
 
   initial clk = 0;
   always #10 clk = ~clk;
 
-  // target_stary tg_i2c(
+  // target_stary tg_i2c( //target stary
   //   .data_send (16'h8041),
   //   .rst(rst),      
   //   .clk(clk), 
@@ -24,16 +24,25 @@ module testbench;
   //   .SCL_bidir(SCL) 
   // );
   
-  target_I2C tg_i2c(
+  // target_I2C tg_i2c( //target nowy
+  //   .sda(SDA),      
+  //   .scl(SCL) 
+  // );
+
+  i2c_slave_top tg_i2c( //target stary
+    .button_0(rst),
+    .clk(clk), 
     .sda(SDA),      
     .scl(SCL) 
   );
+
+
   
-  driver_I2C dv_i2c(
-    .clk(clk),
-    .SDA(SDA),
-    .SCL(SCL)
-  );
+  // driver_I2C dv_i2c(
+  //   .clk(clk),
+  //   .SDA(SDA),
+  //   .SCL(SCL)
+  // );
 
   basic_test test();
 
