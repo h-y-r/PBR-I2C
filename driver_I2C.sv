@@ -210,7 +210,7 @@ module driver_I2C(input logic clk, inout SDA, inout SCL);
   
   task sendBit (input bit data);
     begin
-      $display("[SPRAWDZAM_DRIVER] Czas: %0t | HIGH: %0d, LOW: %0d, HOLD: %0d, SETUP: %0d", $realtime, HIGH_PERIOD_SCL, LOW_PERIOD_SCL, DATA_HOLD_TIME, DATA_SETUP_TIME);
+      //$display("[SPRAWDZAM_DRIVER] Czas: %0t | HIGH: %0d, LOW: %0d, HOLD: %0d, SETUP: %0d", $realtime, HIGH_PERIOD_SCL, LOW_PERIOD_SCL, DATA_HOLD_TIME, DATA_SETUP_TIME);
       SCL_ctrl = 0;
       #DATA_HOLD_TIME SDA_ctrl = data;
       #(DATA_SETUP_TIME) SCL_ctrl = 1;
