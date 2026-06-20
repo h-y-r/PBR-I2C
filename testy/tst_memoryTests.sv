@@ -14,14 +14,6 @@ class data;
     rand logic [7:0] byte6;
     rand logic [7:0] byte7;
     rand logic [7:0] byte8;
-    rand logic [7:0] byte9;
-    rand logic [7:0] byte10;
-    rand logic [7:0] byte11;
-    rand logic [7:0] byte12;
-    rand logic [7:0] byte13;
-    rand logic [7:0] byte14;
-    rand logic [7:0] byte15;
-    rand logic [7:0] byte16;
 endclass
 
 module tst_writeTransaction;
@@ -43,8 +35,8 @@ event assert_chk_dataFromMSB;
 parameter int NUM_TRANSACTIONS = 8;
 parameter int NUM_RUNS = 8;
 
-bit [7:0] dataOut [2*NUM_TRANSACTIONS-1:0];
-bit [7:0] dataIn  [2*NUM_TRANSACTIONS-1:0];
+bit [7:0] dataOut [NUM_TRANSACTIONS-1:0];
+bit [7:0] dataIn  [NUM_TRANSACTIONS-1:0];
 
 
 property ACK_AFTER_DATA;
@@ -58,9 +50,7 @@ initial begin
     Transaction tr;
     Transaction tr2;
     Transaction tr3;
-    data random_bytes;
-
-    random_bytes = new();
+    data random_bytes = new();
 
     `RAND = new();
     if (!`RAND.randomize()) begin
@@ -89,23 +79,13 @@ initial begin
         dataOut[5] = random_bytes.byte6;
         dataOut[6] = random_bytes.byte7;
         dataOut[7] = random_bytes.byte8;
-        dataOut[8] = random_bytes.byte9;
-        dataOut[9] = random_bytes.byte10;
-        dataOut[10] = random_bytes.byte11;
-        dataOut[11] = random_bytes.byte12;
-        dataOut[12] = random_bytes.byte13;
-        dataOut[13] = random_bytes.byte14;
-        dataOut[14] = random_bytes.byte15;
-        dataOut[15] = random_bytes.byte16;
 
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
         tr = new(
             .addr(7'b0010000), 
             .rwSet(0), 
             .data_to_send({7'h00, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
-                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8, 
-                           random_bytes.byte9, random_bytes.byte10, random_bytes.byte11, random_bytes.byte12, 
-                           random_bytes.byte13, random_bytes.byte14, random_bytes.byte15, random_bytes.byte16})
+                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
         );
         
         `MAIL.put(tr);
@@ -122,13 +102,13 @@ initial begin
         tr3 = new(
             .addr(7'b0010000),
             .rwSet(1),
-            .r_len(16)
+            .r_len(8)
         );
 
         `MAIL.put(tr3);
 
         wait (`DRIVER.phase == M_DATA_RX);
-        for (int k = 0; k <= NUM_TRANSACTIONS*2-1; k++) begin
+        for (int k = 0; k <= NUM_TRANSACTIONS-1; k++) begin
             wait (`DRIVER.phase == M_ACK_DATA);
             dataIn[k] = `DRIVER.data_got;
             #20us;
@@ -141,11 +121,11 @@ initial begin
         -> assert_chk_dataFullBuff;
         #1us;
 
-        OVERFLOW = (dataOut[15:12] == dataIn[3:0]);
+        OVERFLOW = (dataOut[7:4] == dataIn[3:0]);
         -> assert_chk_overflow;
         #1us;
 
-        DATA_FROM_MSB = (dataOut[7:0] == dataIn[7:0]);
+        DATA_FROM_MSB = (dataOut[3:0] == dataIn[3:0]);
         -> assert_chk_dataFromMSB;
         #1us;
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
@@ -163,22 +143,12 @@ initial begin
         dataOut[5] = random_bytes.byte6;
         dataOut[6] = random_bytes.byte7;
         dataOut[7] = random_bytes.byte8;
-        dataOut[8] = random_bytes.byte9;
-        dataOut[9] = random_bytes.byte10;
-        dataOut[10] = random_bytes.byte11;
-        dataOut[11] = random_bytes.byte12;
-        dataOut[12] = random_bytes.byte13;
-        dataOut[13] = random_bytes.byte14;
-        dataOut[14] = random_bytes.byte15;
-        dataOut[15] = random_bytes.byte16;
 
         tr = new(
             .addr(7'b0010000), 
             .rwSet(0), 
             .data_to_send({7'h16, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
-                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8, 
-                           random_bytes.byte9, random_bytes.byte10, random_bytes.byte11, random_bytes.byte12, 
-                           random_bytes.byte13, random_bytes.byte14, random_bytes.byte15, random_bytes.byte16})
+                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
         );
         
         `MAIL.put(tr);
