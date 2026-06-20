@@ -33,8 +33,9 @@ initial begin
 	#100ns;
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
 
-		`DRIVER.addrOnly(7'b0000111);
+		`DRIVER.addrOnly(7'b0010000);
 
+		wait(`DRIVER.phase == M_START);
 		wait(`DRIVER.phase == M_DONE);
 		lastAck = `DRIVER.last_ack;
 		->assert_chk_ackAddrOnly;
