@@ -16,14 +16,14 @@ i2c_timing_cfg_t timing_cfg;
 
 realtime t_last_sda_change;
 realtime t_last_scl_fall;
-
-
+realtime t_last_scl_fall_previous;
 
 always @(testbench.SDA) begin
     t_last_sda_change = $realtime;
 end
 
 always @(negedge testbench.SCL) begin
+    t_last_scl_fall_previous = t_last_scl_fall;
     t_last_scl_fall = $realtime;
 end
 
@@ -115,11 +115,8 @@ end
 
 
 property P_SCL_PERIOD;
-    realtime t1;
-
     @(negedge testbench.SCL)
-    (1, t1 = $realtime)
-    |=> (($realtime - t1) >= timing_cfg.T_SCL_MIN);
+    (`DRIVER.phase != M_IDLE) |-> (($realtime - t_last_scl_fall_previous) >= timing_cfg.T_SCL_MIN);
 endproperty
 
 chk_SCLPeriod: assert property (P_SCL_PERIOD)
@@ -128,11 +125,11 @@ else
     $error("TIMING VIOLATION: SCL period too short, expected >= %0t",
            timing_cfg.T_SCL_MIN);
 
-
 property P_START_HOLD;
     realtime t_start;
 
     @(negedge testbench.SDA)
+    disable iff (`DRIVER.phase != M_START)
     (testbench.SCL == 1 && `DRIVER.phase == M_START, t_start = $realtime)
     |-> @(negedge testbench.SCL)
         (($realtime - t_start) >= timing_cfg.T_HD_STA_MIN);
@@ -149,6 +146,7 @@ property P_REPEATED_START_SETUP;
     realtime t_scl_rise;
 
     @(posedge testbench.SCL)
+    disable iff (`DRIVER.phase != M_START)
     (`DRIVER.phase == M_START, t_scl_rise = $realtime)
     |-> @(negedge testbench.SDA)
         (testbench.SCL == 1 &&
@@ -166,6 +164,7 @@ property P_STOP_SETUP;
     realtime t_scl_rise;
 
     @(posedge testbench.SCL)
+    disable iff (`DRIVER.phase != M_STOP)
     (`DRIVER.phase == M_STOP, t_scl_rise = $realtime)
     |-> @(posedge testbench.SDA)
         (testbench.SCL == 1 &&
@@ -184,6 +183,7 @@ property P_STOP_START_FREE_TIME;
     realtime t_stop;
 
     @(posedge testbench.SDA)
+    disable iff (`DRIVER.phase != M_STOP)
     (testbench.SCL == 1 && `DRIVER.phase == M_STOP, t_stop = $realtime)
     |-> @(negedge testbench.SDA)
         (testbench.SCL == 1 &&
