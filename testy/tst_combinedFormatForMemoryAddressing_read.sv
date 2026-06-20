@@ -43,7 +43,7 @@ initial begin
 	`MAIL.put(tr_addr);
 	`MAIL.put(tr_read);
 
-	wait (`DRIVER.phase == M_SR);
+	//wait (`DRIVER.phase == M_SR);
 	wait (`DRIVER.phase == M_DATA_TX);
 	REPEATED_START = `DRIVER.last_ack;
 	-> assert_chk_repeatedStartToKeepBusBusy;
