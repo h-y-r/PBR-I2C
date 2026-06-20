@@ -87,7 +87,8 @@ initial begin
     `DRIVER.START_SETUP_TIME = `RAND.start_setup_time;
     `DRIVER.START_HOLD_TIME  = `RAND.start_hold_time;
     `DRIVER.STOP_SETUP_TIME  = `RAND.stop_setup_time;
-    `DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+    //`DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
+    `DRIVER.DATA_HOLD_TIME   = `RAND.low_period - `RAND.setup_time;
 
     #100ns;
 
