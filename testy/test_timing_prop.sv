@@ -90,6 +90,19 @@ initial begin
     //`DRIVER.DATA_HOLD_TIME   = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
     `DRIVER.DATA_HOLD_TIME   = `RAND.low_period - `RAND.setup_time;
 
+    $display("\n==================================================");
+    $display("[I2C_TEST_CFG] WYBRANY TRYB: %s", mode_arg);
+    $display("--------------------------------------------------");
+    $display("Wylosowane wartosci czasowe przekazane do Drivera:");
+    $display(" -> HIGH_PERIOD_SCL  = %0f ns", `RAND.high_period);
+    $display(" -> LOW_PERIOD_SCL   = %0f ns", `RAND.low_period);
+    $display(" -> DATA_SETUP_TIME  = %0f ns", `RAND.setup_time);
+    $display(" -> DATA_HOLD_TIME   = %0f ns", (`RAND.low_period - `RAND.setup_time));
+    $display(" -> START_SETUP_TIME = %0f ns", `RAND.start_setup_time);
+    $display(" -> START_HOLD_TIME  = %0f ns", `RAND.start_hold_time);
+    $display(" -> STOP_SETUP_TIME  = %0f ns", `RAND.stop_setup_time);
+    $display("==================================================\n");
+    
     #100ns;
 
     tr = new(
