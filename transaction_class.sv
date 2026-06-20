@@ -23,15 +23,15 @@ package transaction_class;
     Transaction tr;
 
     constraint c_q_size {
-      data_send.size() inside {[1,4]};
+      data_send.size() inside {[1:4]};
     }
 
     constraint c_reg_addr {
-      reg_addr inside {[0,3]};
+      reg_addr inside {[0:3]};
     }
 
     constraint c_read_length {
-      readlen inside {[1,4]};
+      readlen inside {[1:4]};
     }
 
     function new(bit [6:0] addr);

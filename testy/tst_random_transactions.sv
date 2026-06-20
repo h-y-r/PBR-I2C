@@ -14,6 +14,7 @@ int NUM_TRANSACTIONS = testbench.NUM_TRANSACTIONS;
 
 initial begin
 	test_randomizer tests;
+	int i;
 
 	`RAND = new();
 	tests = new(7'b0010000);
@@ -31,8 +32,26 @@ initial begin
 	#100ns;
 
 
-	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
+	for (i = 1; i <= NUM_TRANSACTIONS; i++) begin
 		if(!tests.randomize()) $error("Test randomization failed");
+
+		$display("\n==================================================");
+        $display("[I2C_TEST_RANDOM] TEST %d", i);
+        $display("--------------------------------------------------");
+        $display("Wylosowana transakcja:");
+        $display("Typ transakcji: %s", tests.rw ? "READ":"WRITE");
+        $display("Adres Rejestru: %0x", tests.reg_addr);
+        if(tests.rw) begin
+        	$display("Długość odczytu: %0d", tests.readlen);
+        end else begin
+        	$display("Długość zapisu: %0d", tests.data_send.size());
+	        for(int j = 0; j<tests.data_send.size(); j++) begin
+	        	$display("Dane do wysłania, bajt %0d: %8b", j+1, tests.data_send[j]);
+	        end
+	    end
+        $display("==================================================\n");
+
+
 		`MAIL.put(tests.tr_reg_addr);
 
 		wait(`DRIVER.phase == M_START);
