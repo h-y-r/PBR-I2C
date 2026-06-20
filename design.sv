@@ -1,13 +1,7 @@
 `timescale 1ns/10ps
 import transaction_class::*;
+import i2c_timing_types_pkg::*;
 
-typedef enum int {
-
-    MODE_STD,
-    MODE_FAST,
-    MODE_FAST_PLUS
-
-} i2c_mode_e;
 
  class I2C_Config;
 
@@ -26,7 +20,7 @@ typedef enum int {
    endfunction
 
    constraint mode_supported_c {
-        mode inside {MODE_STD, MODE_FAST, MODE_FAST_PLUS};
+        mode inside {MODE_STD, MODE_FAST, MODE_FMP};
     }
 
     constraint bit_c {
@@ -71,7 +65,7 @@ typedef enum int {
     }
 
     constraint fast_plus_timing_c {
-        if (mode == MODE_FAST_PLUS) {
+        if (mode == MODE_FMP) {
             high_period       inside {[260:1000]};
             low_period        inside {[500:1000]};
             setup_time        inside {[50:500]};
