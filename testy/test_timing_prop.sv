@@ -102,7 +102,7 @@ initial begin
     $display(" -> START_HOLD_TIME  = %0f ns", `RAND.start_hold_time);
     $display(" -> STOP_SETUP_TIME  = %0f ns", `RAND.stop_setup_time);
     $display("==================================================\n");
-    
+
     #100ns;
 
     tr = new(
@@ -198,12 +198,13 @@ else
 property P_STOP_START_FREE_TIME;
     realtime t_stop;
 
+   
     @(posedge testbench.SDA)
-    disable iff (`DRIVER.phase != M_STOP)
-    (testbench.SCL == 1 && `DRIVER.phase == M_STOP, t_stop = $realtime)
+    (testbench.SCL == 1, t_stop = $realtime)
+    
+
     |-> @(negedge testbench.SDA)
-        (testbench.SCL == 1 &&
-        (($realtime - t_stop) >= timing_cfg.T_BUF_MIN));
+        (testbench.SCL == 1) |-> (($realtime - t_stop) >= timing_cfg.T_BUF_MIN);
 endproperty
 
 chk_stopStartFreeTime: assert property (P_STOP_START_FREE_TIME)
@@ -211,7 +212,6 @@ chk_stopStartFreeTime: assert property (P_STOP_START_FREE_TIME)
 else
     $error("TIMING VIOLATION: bus free time STOP-to-START too short, expected >= %0t",
            timing_cfg.T_BUF_MIN);
-
 
 
 
