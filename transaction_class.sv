@@ -13,6 +13,48 @@ package transaction_class;
     endfunction : new
   endclass
 
+  class test_randomizer;
+    bit [6:0] address;
+    rand bit rw;
+    rand int readlen;
+    rand logic [7:0] reg_addr;
+    rand logic [7:0] data_send [$];
+    Transaction tr_reg_addr;
+    Transaction tr;
+
+    constraint c_q_size {
+      data_send.size() inside {[1,4]};
+    }
+
+    constraint c_reg_addr {
+      reg_addr inside {[0,3]};
+    }
+
+    constraint c_read_length {
+      readlen inside {[1,4]};
+    }
+
+    function new(bit [6:0] addr);
+        address = addr;
+    endfunction : new
+
+    function void post_randomize();
+        tr_reg_addr = new(
+            .addr(address),
+            .rwSet(0),
+            .data_to_send({reg_addr})
+        );
+
+        tr = new(
+            .addr(address),
+            .rwSet(rw),
+            .r_len(readlen),
+            .data_to_send(data_send)
+        );
+    endfunction : post_randomize
+
+  endclass
+
   typedef enum logic [3:0] {
     M_IDLE,      
     M_START,     
