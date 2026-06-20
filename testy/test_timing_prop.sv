@@ -92,13 +92,13 @@ initial begin
     #100ns;
 
     tr = new(
-        .addr(7'b0000111),
+        .addr(7'b0010000),
         .rwSet(0),
         .data_to_send({8'b10101010, 8'b11100011})
     );
 
     tr2 = new(
-        .addr(7'b0000111),
+        .addr(7'b0010000),
         .rwSet(0),
         .data_to_send({8'b10101010, 8'b11100011})
     );
