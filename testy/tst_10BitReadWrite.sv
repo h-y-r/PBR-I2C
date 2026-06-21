@@ -55,9 +55,9 @@ initial begin
 	#100ns;
 
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin		
-		`DRIVER.writeTransaction10BIT(10'b0000010000, 8'b10101010);
+		`DRIVER.writeTransaction10BIT({3'b000,testbench.ADDR}, 8'b10101010);
 		#`DRIVER.BUFF_TIME;
-		`DRIVER.readTransaction10BIT(10'b0000010000);
+		`DRIVER.readTransaction10BIT({3'b000,testbench.ADDR});
 		#100us;
 	end
 	

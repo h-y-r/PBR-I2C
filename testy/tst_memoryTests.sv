@@ -84,17 +84,18 @@ initial begin
 
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
         tr = new(
-            .addr(7'b0010000), 
+            .addr(testbench.ADDR), 
             .rwSet(0), 
-            .data_to_send({7'h00, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
+            .data_to_send({7'h00, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4,
                            random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
         );
         
         `MAIL.put(tr);
+        wait (`DRIVER.phase == M_START);
         wait (`DRIVER.phase == M_DONE);
 
         tr2 = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(0),
             .data_to_send({7'h00})
         );
@@ -102,7 +103,7 @@ initial begin
         `MAIL.put(tr2);
 
         tr3 = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(1),
             .r_len(8)
         );
@@ -147,20 +148,21 @@ initial begin
         dataOut[7] = random_bytes.byte8;
 
         tr = new(
-            .addr(7'b0010000), 
+            .addr(testbench.ADDR), 
             .rwSet(0), 
-            .data_to_send({7'h16, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
+            .data_to_send({7'h4, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
                            random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
         );
         
         `MAIL.put(tr);
 
+        wait (`DRIVER.phase == M_START);
         wait (`DRIVER.phase == M_DONE);
 
         tr2 = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(0),
-            .data_to_send({7'h16})
+            .data_to_send({7'h4})
         );
 
         `MAIL.put(tr2);

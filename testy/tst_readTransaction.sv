@@ -45,7 +45,7 @@ initial begin
         start_assert = 0;
 
         tr = new(
-            .addr(7'b0010000), 
+            .addr(testbench.ADDR), 
             .rwSet(0), 
             .data_to_send({8'd0})
         );
@@ -54,7 +54,7 @@ initial begin
         wait (`DRIVER.phase == M_DONE);
 
         tr = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(1),
             .r_len(2)
         );

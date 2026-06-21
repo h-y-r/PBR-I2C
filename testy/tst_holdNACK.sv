@@ -35,7 +35,7 @@ initial begin
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
 
 		tr = new(
-            .addr(7'b0010000), 
+            .addr(testbench.ADDR), 
             .rwSet(0), 
             .data_to_send({8'd0})
         );
@@ -45,7 +45,7 @@ initial begin
 
         wait (`DRIVER.phase == M_DONE);
 
-		`DRIVER.burstReadHoldErr(7'b0010000, 2);
+		`DRIVER.burstReadHoldErr(testbench.ADDR, 2);
 		wait (`DRIVER.phase == M_DONE);
 	end
 	$finish();

@@ -88,7 +88,7 @@ initial begin
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
         for (int j = 0; j <= 5; j++) begin
             tr = new(
-                .addr(7'b0010000), 
+                .addr(testbench.ADDR), 
                 .rwSet(0), 
                 .data_to_send({7'h01, dataOut[j]})
             );
@@ -99,7 +99,7 @@ initial begin
         wait (`DRIVER.phase == M_DONE);
 
         tr2 = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(0),
             .data_to_send({7'h01})
         );
@@ -109,7 +109,7 @@ initial begin
         wait (`DRIVER.phase == M_DONE);
 
         tr3 = new(
-            .addr(7'b0010000),
+            .addr(testbench.ADDR),
             .rwSet(1),
             .r_len(1)
         );

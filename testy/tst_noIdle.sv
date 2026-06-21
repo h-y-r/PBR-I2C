@@ -50,7 +50,7 @@ initial begin
 		testbench.rst = 1;
 
 		tr = new(
-	        .addr(7'b0010000), 
+	        .addr(testbench.ADDR), 
 	        .rwSet(0), 
 	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
 	    );

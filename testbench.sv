@@ -9,16 +9,21 @@ module testbench;
   pullup(SCL);
 
   logic clk;
-  logic rst;
+  logic rst_1;
+  tri1 rst;
+  pullup(rst);
+  bit rst_ctrl;
+  assign rst = rst_ctrl ? 1'bz : 1'b0;
 
-  parameter int NUM_TRANSACTIONS = 2;
+  parameter int NUM_TRANSACTIONS = 5;
+  parameter bit [6:0] ADDR = 7'h24;
 
   initial clk = 0;
   always #10 clk = ~clk;
 
   // target_stary tg_i2c( //target stary
   //   .data_send (16'h8041),
-  //   .rst(rst),      
+  //   .rst(rst_1),      
   //   .clk(clk), 
   //   .SDA_bidir(SDA),      
   //   .SCL_bidir(SCL) 
@@ -36,18 +41,15 @@ module testbench;
     .scl(SCL) 
   );
 
-
-  
-  // driver_I2C dv_i2c(
-  //   .clk(clk),
-  //   .SDA(SDA),
-  //   .SCL(SCL)
-  // );
+  driver_I2C dv_i2c(
+    .clk(clk),
+    .SDA(SDA),
+    .SCL(SCL)
+  );
 
   basic_test test();
 
   I2C_Config i2c_cfg;
-	
 
   Transaction test_tr;
   Transaction test_tr2;	  
@@ -69,11 +71,14 @@ module testbench;
     $dumpfile("dump.vcd");
     $dumpvars(0,testbench);
     #10;
-    rst = 1;    
+    rst_ctrl = 0;
+    rst_1    = 1;  
     #10;     
-    rst = 0; 
+    rst_ctrl = 1; 
+    rst_1    = 0;  
     #10;
-    rst = 1;
+    rst_ctrl = 0;
+    rst_1    = 1;  
     #10;
   end
 

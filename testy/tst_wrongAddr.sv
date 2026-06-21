@@ -28,7 +28,7 @@ initial begin
 	logic[6:0] correct_address;
 	logic[6:0] wrong_address;
 	address = new();
-	correct_address = 7'b0010000;
+	correct_address = testbench.ADDR;
 	
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -50,7 +50,7 @@ initial begin
 		if (!address.randomize()) begin
 			$error("blad");
 		end
-		while(address.randaddr == 7'b0010000) begin
+		while(address.randaddr == testbench.ADDR) begin
 			if (!address.randomize()) begin
 				$error("blad");
 			end

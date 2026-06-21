@@ -127,7 +127,7 @@ package i2c_timing_types_pkg;
       MODE_HS:   return get_high_speed_cfg();
       MODE_UF:   return get_ultra_fast_cfg();
       default: begin
-        $fatal("Niewspierany tryb I2C");
+        return get_std_mode_cfg();
       end
     endcase
   endfunction

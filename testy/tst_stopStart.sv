@@ -64,13 +64,13 @@ initial begin
 		$error("blad");
 		end	
 		tr1 = new(
-	        .addr(7'b0010000), 
+	        .addr(testbench.ADDR), 
 	        .rwSet(0), 
 	        .data_to_send({randdata.byte1})
 	    );
 
 		tr2 = new(
-	        .addr(7'b0010000), 
+	        .addr(testbench.ADDR), 
 	        .rwSet(0), 
 	        .data_to_send({randdata.byte2})
 	    );

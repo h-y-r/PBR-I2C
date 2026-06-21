@@ -40,7 +40,7 @@ initial begin
     `DRIVER.STOP_SETUP_TIME   = `RAND.stop_setup_time;
     `DRIVER.DATA_HOLD_TIME    = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;
 
-    `DRIVER.burstReadError(7'b0010000, 2);
+    `DRIVER.burstReadError(testbench.ADDR, 2);
 
     wait (`DRIVER.phase == M_ACK_DATA);
     prev_sda = testbench.SDA;

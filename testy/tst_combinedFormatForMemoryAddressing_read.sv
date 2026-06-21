@@ -30,13 +30,13 @@ initial begin
 	`DRIVER.DATA_HOLD_TIME = `DRIVER.LOW_PERIOD_SCL - `DRIVER.DATA_SETUP_TIME;	
 	#100ns;
 	tr_addr = new(
-        .addr(7'b0010000), 
+        .addr(testbench.ADDR), 
         .rwSet(0), 
         .data_to_send({8'd0})
     );
 
     tr_read = new(
-    	.addr(7'b0010000),
+    	.addr(testbench.ADDR),
     	.rwSet(1),
     	.r_len(1)
     );

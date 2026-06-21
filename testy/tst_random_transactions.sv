@@ -17,7 +17,7 @@ initial begin
 	int i;
 
 	`RAND = new();
-	tests = new(7'b0010000);
+	tests = new(testbench.ADDR);
 	if (!`RAND.randomize()) begin
 	$error("blad");
 	end

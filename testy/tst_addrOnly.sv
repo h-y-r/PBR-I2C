@@ -33,7 +33,7 @@ initial begin
 	#100ns;
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin
 
-		`DRIVER.addrOnly(7'b0010000);
+		`DRIVER.addrOnly(testbench.ADDR);
 
 		//wait(`DRIVER.phase == M_START);
 		//wait(`DRIVER.phase == M_DONE);

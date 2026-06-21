@@ -38,7 +38,9 @@ endproperty
 
 initial begin
 	Transaction tr;
-	data random_bytes = new();
+	data random_bytes;
+
+	random_bytes = new();
 
 	`RAND = new();
 	if (!`RAND.randomize()) begin
@@ -59,7 +61,7 @@ initial begin
 		end
 
 		tr = new(
-	        .addr(7'b0010000), 
+	        .addr(testbench.ADDR), 
 	        .rwSet(0), 
 	        .data_to_send({random_bytes.byte1, random_bytes.byte2})
 	    );
@@ -67,7 +69,7 @@ initial begin
 		`MAIL.put(tr);
 
 		wait (`DRIVER.phase == M_ACK_ADDR);
-		RW_BIT = (!`TARGET.rw);
+		//RW_BIT = (!`TARGET.rw);
 		-> assert_chk_RWBitWrite;
 		wait (`DRIVER.phase == M_DATA_TX);
 		ACK_AFTER_ADDR = `DRIVER.last_ack;

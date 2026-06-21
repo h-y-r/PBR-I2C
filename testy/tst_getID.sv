@@ -42,7 +42,7 @@ initial begin
 	#100ns;
 		
 	for (int i = 0; i < NUM_TRANSACTIONS; i++) begin		
-		`DRIVER.getDeviceID(7'b0010000);	
+		`DRIVER.getDeviceID(testbench.ADDR);	
 		#100ns;
 	end
 	$finish(0);
