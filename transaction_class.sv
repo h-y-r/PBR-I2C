@@ -53,10 +53,11 @@ package transaction_class;
             .r_len(readlen)
         );
       end else begin
+        data_send.push_front(tr_reg_addr);
         tr_combined_write = new(
             .addr(address),
             .rwSet(rw),
-            .data_to_send({tr_reg_addr, data_send})
+            .data_to_send(data_send)
         );
       end
     endfunction : post_randomize
