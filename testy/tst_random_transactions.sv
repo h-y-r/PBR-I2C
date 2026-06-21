@@ -51,16 +51,22 @@ initial begin
 	    end
         $display("==================================================\n");
 
+        if(tests.rw) begin
+			`MAIL.put(tests.tr_reg_addr);
 
-		`MAIL.put(tests.tr_reg_addr);
+			wait(`DRIVER.phase == M_START);
+			wait(`DRIVER.phase == M_DONE);
 
-		wait(`DRIVER.phase == M_START);
-		wait(`DRIVER.phase == M_DONE);
+			`MAIL.put(tests.tr);
 
-		`MAIL.put(tests.tr);
+			wait(`DRIVER.phase == M_START);
+			wait(`DRIVER.phase == M_DONE);
+		end else begin
+			`MAIL.put(tests.tr_combined_write);
 
-		wait(`DRIVER.phase == M_START);
-		wait(`DRIVER.phase == M_DONE);
+			wait(`DRIVER.phase == M_START);
+			wait(`DRIVER.phase == M_DONE);
+		end
 	end
 
 	$finish();

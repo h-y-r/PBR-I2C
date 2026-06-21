@@ -21,6 +21,7 @@ package transaction_class;
     rand logic [7:0] data_send [$];
     Transaction tr_reg_addr;
     Transaction tr;
+    Transaction tr_combined_write;
 
     constraint c_q_size {
       data_send.size() inside {[1:4]};
@@ -39,6 +40,7 @@ package transaction_class;
     endfunction : new
 
     function void post_randomize();
+      if(rw)begin
         tr_reg_addr = new(
             .addr(address),
             .rwSet(0),
@@ -48,9 +50,15 @@ package transaction_class;
         tr = new(
             .addr(address),
             .rwSet(rw),
-            .r_len(readlen),
-            .data_to_send(data_send)
+            .r_len(readlen)
         );
+      end else begin
+        tr_combined_write = new(
+            .addr(address),
+            .rwSet(rw),
+            .data_to_send({tr_reg_addr, data_send})
+        );
+      end
     endfunction : post_randomize
 
   endclass
