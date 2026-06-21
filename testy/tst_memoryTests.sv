@@ -14,6 +14,14 @@ class data;
     rand logic [7:0] byte6;
     rand logic [7:0] byte7;
     rand logic [7:0] byte8;
+    rand logic [7:0] byte9;
+    rand logic [7:0] byte10;
+    rand logic [7:0] byte11;
+    rand logic [7:0] byte12;
+    rand logic [7:0] byte13;
+    rand logic [7:0] byte14;
+    rand logic [7:0] byte15;
+    rand logic [7:0] byte16;
 endclass
 
 module basic_test;
@@ -32,7 +40,7 @@ event assert_chk_dataFullBuff;
 event assert_chk_outOfRange;
 event assert_chk_dataFromMSB;
 
-parameter int NUM_TRANSACTIONS = 8;
+parameter int NUM_TRANSACTIONS = 16;
 int NUM_RUNS = testbench.NUM_TRANSACTIONS;
 
 bit [7:0] dataOut [NUM_TRANSACTIONS-1:0];
@@ -81,13 +89,23 @@ initial begin
         dataOut[5] = random_bytes.byte6;
         dataOut[6] = random_bytes.byte7;
         dataOut[7] = random_bytes.byte8;
+        dataOut[8] = random_bytes.byte9;
+        dataOut[9] = random_bytes.byte10;
+        dataOut[10] = random_bytes.byte11;
+        dataOut[11] = random_bytes.byte12;
+        dataOut[12] = random_bytes.byte13;
+        dataOut[13] = random_bytes.byte14;
+        dataOut[14] = random_bytes.byte15;
+        dataOut[15] = random_bytes.byte16;
 
         //TEST ZAPISU PELNEGO BUFORA I OVEFLOW
         tr = new(
             .addr(testbench.ADDR), 
             .rwSet(0), 
             .data_to_send({7'h00, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4,
-                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
+                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8,
+                           random_bytes.byte9, random_bytes.byte10, random_bytes.byte11, random_bytes.byte12,
+                           random_bytes.byte13, random_bytes.byte14, random_bytes.byte15, random_bytes.byte16})
         );
         
         `MAIL.put(tr);
@@ -105,7 +123,7 @@ initial begin
         tr3 = new(
             .addr(testbench.ADDR),
             .rwSet(1),
-            .r_len(8)
+            .r_len(NUM_TRANSACTIONS)
         );
 
         `MAIL.put(tr3);
@@ -146,12 +164,22 @@ initial begin
         dataOut[5] = random_bytes.byte6;
         dataOut[6] = random_bytes.byte7;
         dataOut[7] = random_bytes.byte8;
+        dataOut[8] = random_bytes.byte9;
+        dataOut[9] = random_bytes.byte10;
+        dataOut[10] = random_bytes.byte11;
+        dataOut[11] = random_bytes.byte12;
+        dataOut[12] = random_bytes.byte13;
+        dataOut[13] = random_bytes.byte14;
+        dataOut[14] = random_bytes.byte15;
+        dataOut[15] = random_bytes.byte16;
 
         tr = new(
             .addr(testbench.ADDR), 
             .rwSet(0), 
-            .data_to_send({7'h4, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4, 
-                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8})
+            .data_to_send({7'h15, random_bytes.byte1, random_bytes.byte2, random_bytes.byte3, random_bytes.byte4,
+                           random_bytes.byte5, random_bytes.byte6, random_bytes.byte7, random_bytes.byte8,
+                           random_bytes.byte9, random_bytes.byte10, random_bytes.byte11, random_bytes.byte12,
+                           random_bytes.byte13, random_bytes.byte14, random_bytes.byte15, random_bytes.byte16})
         );
         
         `MAIL.put(tr);
@@ -162,7 +190,7 @@ initial begin
         tr2 = new(
             .addr(testbench.ADDR),
             .rwSet(0),
-            .data_to_send({7'h4})
+            .data_to_send({7'h15})
         );
 
         `MAIL.put(tr2);
