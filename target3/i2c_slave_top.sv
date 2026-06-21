@@ -67,7 +67,19 @@ module i2c_slave_top (
     .register_0 ( ),          // output [7:0]
     .register_1 ( ),          // output [7:0]
     .register_2 ( ),          // output [7:0]
-    .register_3 ( )           // output [7:0]
+    .register_3 ( ),           // output [7:0]
+    .register_4 ( ),
+    .register_5 ( ),
+    .register_6 ( ),
+    .register_7 ( ),
+    .register_8 ( ),
+    .register_9 ( ),
+    .register_10 ( ),
+    .register_11 ( ),
+    .register_12 ( ),
+    .register_13 ( ),
+    .register_14 ( ),
+    .register_15 ( )
   );
 
   ///// This logic is optional, to reset i2c_slave in case sda is stuck low
