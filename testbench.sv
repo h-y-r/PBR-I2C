@@ -15,7 +15,7 @@ module testbench;
   bit rst_ctrl;
   assign rst = rst_ctrl ? 1'bz : 1'b0;
 
-  parameter int NUM_TRANSACTIONS = 5;
+  parameter int NUM_TRANSACTIONS = 100;
   parameter bit [6:0] ADDR = 7'h24;
 
   initial clk = 0;
